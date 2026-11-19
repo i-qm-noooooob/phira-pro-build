@@ -1,4 +1,5 @@
 use super::*;
+prpr_l10n::tl_file!("settings");
 use crate::{dir, get_data};
 use anyhow::{Context, Result};
 use prpr::scene::{request_file, request_input, return_file, return_input, show_error, show_message, take_file, take_input};
