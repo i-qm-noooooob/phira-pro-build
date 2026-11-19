@@ -331,7 +331,7 @@ impl RenderPage {
                     ui,
                     &mut y,
                     width,
-                    &format!("{}   {:.1}%   {frame}/{total} {}   {} {eta}", renderer.stage().map_or(tl!("render-rendering").into_owned(), |stage| stage.label().to_owned()), p * 100., tl!("render-frames"), tl!("render-eta")),
+                    &format!("{}   {:.1}%   {frame}/{total} {}   {} {eta}", renderer.stage().map_or(tl!("render-rendering").into_owned(), |stage| stage.label().to_owned()), p * 100., tl!("render-frames"), tl!("render-eta") tl!("render-frames"), tl!("render-eta")),
                     SMALL,
                     WHITE,
                 );
