@@ -324,7 +324,7 @@ impl Page for RenderPage {
             for (i, button) in self.fields.iter_mut().enumerate() {
                 if button.touch(touch, t) {
                     if let Err(err) = self.activate_field(settings::FIELDS[i]) {
-                        show_message(format!("设置未保存：{err}"));
+                        show_message(format!("{}: {err}", tl!("render-settings-not-saved")));
                     }
                     return Ok(true);
                 }
