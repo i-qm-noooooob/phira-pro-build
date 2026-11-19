@@ -248,12 +248,12 @@ impl RenderPage {
         let value = self.field_value(field);
         let control_w = (width * 0.43).min(0.5);
         let label_w = width - control_w - 0.035;
-        let label_h = ui.text(name).size(BODY).no_baseline().max_width(label_w).multiline().measure().h;
-        let help_text = if overview { "" } else { help };
+        let label_h = ui.text(&name).size(BODY).no_baseline().max_width(label_w).multiline().measure().h;
+        let help_text = if overview { "" } else { help.as_str() };
         let row = Rect::new(0., 0., width, height);
         ui.fill_path(&row.rounded(0.006), semi_black(0.22));
         let alpha = if enabled { 1. } else { 0.45 };
-        ui.text(name)
+        ui.text(&name)
             .pos(0.012, 0.012)
             .size(BODY)
             .no_baseline()
