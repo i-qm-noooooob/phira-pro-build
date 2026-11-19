@@ -2,6 +2,7 @@
 use super::{Prefs, FPS_CHOICES, RESOLUTIONS};
 use anyhow::{bail, Result};
 use prpr::chart_video::{PresentationOptions, PresentationStyle};
+prpr_l10n::tl_file!("settings");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Category {
@@ -23,15 +24,15 @@ pub const CATEGORIES: [Category; 7] = [
     Category::Overview,
 ];
 impl Category {
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            Self::Output => "输出",
-            Self::Visuals => "游玩画面",
-            Self::Flow => "演出流程",
-            Self::Opening => "开场",
-            Self::Ending => "结算",
-            Self::Audio => "音频",
-            Self::Overview => "参数总览",
+            Self::Output => tl!("render-category-output").into_owned(),
+            Self::Visuals => tl!("render-category-visuals").into_owned(),
+            Self::Flow => tl!("render-category-flow").into_owned(),
+            Self::Opening => tl!("render-category-opening").into_owned(),
+            Self::Ending => tl!("render-category-ending").into_owned(),
+            Self::Audio => tl!("render-category-audio").into_owned(),
+            Self::Overview => tl!("render-category-overview").into_owned(),
         }
     }
 }
@@ -56,8 +57,15 @@ macro_rules! fields {
         pub enum Field { $($field),* }
         pub const FIELDS: &[Field] = &[$(Field::$field),*];
         impl Field {
-            pub fn info(self) -> (Category, Kind, &'static str, &'static str) {
-                match self { $(Self::$field => (Category::$category, Kind::$kind, $name, $help)),* }
+            pub fn info(self) -> (Category, Kind, String, String) {
+                match self {
+                    $(Self::$field => (
+                        Category::$category,
+                        Kind::$kind,
+                        tl!(concat!("render-field-", stringify!($field), "-name")).into_owned(),
+                        tl!(concat!("render-field-", stringify!($field), "-help")).into_owned()
+                    )),*
+                }
             }
         }
     };
