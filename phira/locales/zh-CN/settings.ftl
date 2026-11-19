@@ -673,3 +673,11 @@ render-eta = 预计剩余
 render-complete = 完成
 render-time = 用时
 render-failed = 渲染失败
+
+render-install-ffmpeg = 请先在输出页安装 FFmpeg，并等待检测完成
+render-select-chart-first = 请先选择谱面
+render-output-name-failed = 无法生成视频文件名
+render-select-output-folder = 选择视频输出目录
+render-default-output-folder = 此平台使用默认视频输出目录
+render-page-label = 谱面渲染
+render-settings-not-saved = 设置未保存
