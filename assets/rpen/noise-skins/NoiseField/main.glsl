@@ -274,10 +274,6 @@ void main() {
     float edge = texture2D(effectRT, edgeUV).r;
     float glow = texture2D(effectRT, uv).g;
 
-    // Both mask bits are packed into the same R8 texel; fetch it once.
-    vec2 maskSize = max(floor(screenSize / max(maskPixelScale, 1.0)), vec2(1.0));
-    vec2 maskUV = (floor(uv * maskSize) + 0.5) / maskSize;
-    float maskWord = floor(texture2D(blockMask, maskUV).r * 255.0 + 0.5);
     float ready = texture2D(readyComposeRT, uv).r;
     float rd = 0.0;
     // Ready coverage is usually empty outside chart objects. Avoid the
