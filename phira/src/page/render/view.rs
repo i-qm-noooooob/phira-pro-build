@@ -26,6 +26,13 @@ fn paragraph(ui: &mut Ui, y: &mut f32, width: f32, value: &str, size: f32, color
 impl RenderPage {
     pub(super) fn render_view(&mut self, ui: &mut Ui, s: &mut SharedState) {
         let t = s.t;
+        let selection_label = if self.selected.is_some() { tl!("render-change").into_owned() } else { tl!("render-select").into_owned() };
+        let start_label = if self.busy() { tl!("render-cancel").into_owned() } else { tl!("render-start").into_owned() };
+        let open_label = if cfg!(target_os = "android") {
+            tl!("render-save-download").into_owned()
+        } else {
+            tl!("render-open-output").into_owned()
+        };
         s.render_fader(ui, |ui| {
             let layout = layout::Layout::new(ui.content_rect());
             ui.fill_path(&layout.outer.rounded(0.012), semi_black(0.55));
@@ -52,7 +59,7 @@ impl RenderPage {
                     .max_width(r.w - 0.20)
                     .color(semi_white(0.65))
                     .draw();
-                ui.text(if self.selected.is_some() { tl!("render-change").as_ref() } else { tl!("render-select").as_ref() })
+                ui.text(&selection_label)
                     .pos(r.right() - 0.025, r.center().y)
                     .anchor(1., 0.5)
                     .no_baseline()
@@ -95,20 +102,8 @@ impl RenderPage {
                 status_scroll.render(ui, |ui| self.render_status(ui, layout.status.w - 0.024));
             });
             self.status_scroll = status_scroll;
-            self.start
-                .render_text(ui, layout.footer[0], t, if self.busy() { tl!("render-cancel").as_ref() } else { tl!("render-start").as_ref() }, BODY, true);
-            self.open.render_text(
-                ui,
-                layout.footer[1],
-                t,
-                if cfg!(target_os = "android") {
-                    tl!("render-save-download").as_ref()
-                } else {
-                    tl!("render-open-output").as_ref()
-                },
-                BODY,
-                false,
-            );
+            self.start.render_text(ui, layout.footer[0], t, &start_label, BODY, true);
+            self.open.render_text(ui, layout.footer[1], t, &open_label, BODY, false);
             if cfg!(target_os = "android") {
                 self.open.invalidate();
             }
