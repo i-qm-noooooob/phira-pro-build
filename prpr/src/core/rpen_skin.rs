@@ -507,16 +507,12 @@ impl Skin {
             // pass. Only component targets need a blank front buffer so their
             // untouched channels survive the component copy. History is never
             // read unless noClear is enabled.
-            let component_targets: std::collections::HashSet<&str> = self
-                .passes
-                .iter()
-                .filter(|pass| pass.component)
-                .map(|pass| pass.output.as_str())
-                .collect();
             for (name, t) in &mut s.targets {
                 let no_clear = flag(&t.spec["noClear"]);
                 if backwards || !no_clear {
-                    if backwards || component_targets.contains(name.as_str()) {
+                    let needs_blank_front = backwards
+                        || self.passes.iter().any(|pass| pass.component && pass.output == *name);
+                    if needs_blank_front {
                         clear(t.front);
                     }
                     if no_clear {
