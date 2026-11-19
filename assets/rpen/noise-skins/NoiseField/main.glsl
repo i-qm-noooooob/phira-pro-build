@@ -81,14 +81,7 @@ float nfBit(float value, float position) {
 // Each pixel encodes SIX Boolean masks that have already passed the agreed
 // subtraction threshold before packing, bit order 0..5:
 // ANormal, ASubtract, D+R Normal, D+R Subtract, R Normal, R Subtract.
-float nfMaskBit(vec2 p, float bit) {
-    // Sample at the CENTER of the original source RT pixel (Screen/8 by default).
-    // Host allocates those RTs at floor(screenSize / maskPixelScale).
-    vec2 msz = max(floor(screenSize / max(maskPixelScale, 1.0)), vec2(1.0));
-    vec2 q = (floor(p * msz) + 0.5) / msz;
-    float maskWord = floor(texture2D(blockMask, q).r * 255.0 + 0.5);
-    return nfBit(maskWord, bit);
-}
+
 vec2 nfPixelCenter(vec2 p, float scale) {
     float s = max(scale, 1.0);
     return (floor(p * screenSize / s) * s + vec2(s * 0.5)) / screenSize;
@@ -281,13 +274,22 @@ void main() {
     float edge = texture2D(effectRT, edgeUV).r;
     float glow = texture2D(effectRT, uv).g;
 
-    float dn = nfMaskBit(uv, 4.0);
-    float ds = nfMaskBit(uv, 5.0);
     float ready = texture2D(readyComposeRT, uv).r;
-    float rd = ready * abs(ds - dn);
+    float rd = 0.0;
+    // Ready coverage is usually empty outside chart objects. Avoid the
+    // additional packed-mask fetch unless the Ready compose has coverage.
+    if (ready > 0.0001) {
+        vec2 maskSize = max(floor(screenSize / max(maskPixelScale, 1.0)), vec2(1.0));
+        vec2 maskUV = (floor(uv * maskSize) + 0.5) / maskSize;
+        float maskWord = floor(texture2D(blockMask, maskUV).r * 255.0 + 0.5);
+        float dn = nfBit(maskWord, 4.0);
+        float ds = nfBit(maskWord, 5.0);
+        rd = ready * abs(ds - dn);
+    }
 
     float sum = glow + edge + comp;
-    float total = rd + sum + texture2D(touchHoverRT, uv).r;
+    float hover = texture2D(touchHoverRT, uv).r;
+    float total = rd + sum + hover;
     if (total - 0.0001 < 0.0) { gl_FragColor = texture2D(screenTexture, uv); return; }
 
     vec3 rgb = vec3(0.0);
@@ -340,7 +342,6 @@ void main() {
         rgb += (rd * rd) * shine;
     }
 
-    float hover = texture2D(touchHoverRT, uv).r;
     if (hover > 0.0001) rgb += nfTouchEffect(uv);
 
     // IMPORTANT: this is the source value from Unlit/ActiveBlock. Do NOT manually

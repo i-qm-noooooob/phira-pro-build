@@ -73,9 +73,9 @@ pub(super) fn sanitize(name: &str) -> String {
 pub(super) fn fmt_duration(seconds: f64) -> String {
     let seconds = seconds.max(0.).round() as u64;
     if seconds >= 60 {
-        format!("{} 分 {} 秒", seconds / 60, seconds % 60)
+        format!("{}m {}s", seconds / 60, seconds % 60)
     } else {
-        format!("{seconds} 秒")
+        format!("{seconds}s")
     }
 }
 

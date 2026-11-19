@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[path = "block_next_mask.rs"]
 mod next;
 
-#[cfg(any(target_os = "windows", target_os = "ios"))]
+#[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
 static MASK_WORKERS: Lazy<Option<rayon::ThreadPool>> = Lazy::new(|| {
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(2));
     (threads > 1)
@@ -22,14 +22,14 @@ static MASK_WORKERS: Lazy<Option<rayon::ThreadPool>> = Lazy::new(|| {
 });
 
 pub(super) fn prepare_workers() {
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     Lazy::force(&MASK_WORKERS);
 }
 
 // Row ownership is disjoint. Workers read only the completed Compose plane;
 // every GL call, texture upload and input evaluation stays on the main thread.
 fn warp_rows(rgba: &mut [u8], active: &mut [u64], width: usize, stride: usize, apply: impl Fn((usize, (&mut [u8], &mut [u64]))) + Sync + Send) {
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     if rgba.len() >= 400_000 {
         if let Some(pool) = &*MASK_WORKERS {
             use rayon::prelude::*;
@@ -63,7 +63,7 @@ fn prefix_rows(plane: &mut [u8], diff: &[i32], width: usize, curve: Option<(&[u8
             }
         }
     };
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     if plane.len() >= 100_000 {
         if let Some(pool) = &*MASK_WORKERS {
             use rayon::prelude::*;
@@ -123,6 +123,22 @@ pub(super) struct Masks {
     next_coverage: next::Coverage,
 }
 
+// Keep Android's Noise Field visually close to the native grid while
+// trimming a small amount of per-frame CPU/GPU mask work. The shader still
+// covers the same screen area; only the mask sampling grid is 10% smaller
+// on each axis (about 19% fewer mask pixels). Other platforms stay exact.
+fn effect_dimensions(width: usize, height: usize) -> (usize, usize) {
+    let (width, height) = ((width / 8).max(1) * 2, (height / 8).max(1) * 2);
+    #[cfg(target_os = "android")]
+    {
+        ((width * 9 / 10).max(1), (height * 9 / 10).max(1))
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        (width, height)
+    }
+}
+
 impl Masks {
     /// Palette sampling follows the exact Compose source texel, including its
     /// binary16 noise rounding and clamp. Coverage remains independent of RGB.
@@ -172,7 +188,7 @@ impl Masks {
     /// fall back to live rasterization. Hard 16 MiB budget, retained on retry.
     pub fn prepare_geometry(&mut self, width: usize, height: usize, aspect: f32, areas: &[super::BlockArea]) {
         self.clear_prepared_geometry();
-        let (bw, bh) = ((width / 8).max(1) * 2, (height / 8).max(1) * 2);
+        let (bw, bh) = effect_dimensions(width, height);
         self.prepared_dim = (bw, bh, aspect);
         Lazy::force(&DISPLACE);
         prepare_workers();
@@ -214,7 +230,7 @@ impl Masks {
         // Refine Compose to the existing EffectRT grid: half-sized boundary
         // cells without larger effect textures, more shader work or narrower
         // edge/glow rings. Native geometry and displacement math stay intact.
-        let (bw, bh) = ((width / 8).max(1) * 2, (height / 8).max(1) * 2);
+        let (bw, bh) = effect_dimensions(width, height);
         let (ew, eh) = (bw, bh);
         let same_zones = self.last_zones.len() == zones.len() && self.last_zones.iter().zip(zones).all(|(a, b)| a.same_mask(b));
         if self.last_dim == (ew, eh, aspect) && same_zones && (self.last_time == Some(time) || self.uniform_compose.is_some()) {
@@ -437,7 +453,7 @@ impl Masks {
     /// Compose Next's independent state groups, then run the very same native
     /// displacement and edge/glow construction as percentage blocks.
     pub fn render_next(&mut self, width: usize, height: usize, aspect: f32, zones: &[Zone], time: f32, single: bool) {
-        let (bw, bh) = ((width / 8).max(1) * 2, (height / 8).max(1) * 2);
+        let (bw, bh) = effect_dimensions(width, height);
         let same = self.next_single == Some(single)
             && self.last_dim == (bw, bh, aspect)
             && self.last_zones.len() == zones.len()

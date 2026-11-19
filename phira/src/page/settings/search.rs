@@ -105,7 +105,7 @@ impl Search {
                 .draw();
         }
         if self.results.is_empty() {
-            ui.text("没有匹配的设置").pos(0.04, 0.04).size(0.45).draw();
+            ui.text(tl!("settings-search-no-results").into_owned()).pos(0.04, 0.04).size(0.45).draw();
         }
         (r.w, (self.results.len() as f32 * 0.12).max(0.15))
     }
@@ -122,7 +122,7 @@ pub fn catalog() -> Vec<(usize, String)> {
         })
         .map(|(tab, key)| (*tab, tl!(*key).into_owned()))
         .collect();
-    entries.extend([(4, "问题诊断".into()), (4, "热键管理".into())]);
+    entries.extend([(4, tl!("settings-search-diagnostics").into_owned()), (4, tl!("settings-search-hotkeys").into_owned())]);
     entries
 }
 

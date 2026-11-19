@@ -503,10 +503,25 @@ impl Skin {
             }
             let repeated = s.clock == Some(res.time);
             let backwards = s.clock.is_none_or(|t| res.time < t);
-            for t in s.targets.values_mut() {
-                if backwards || !flag(&t.spec["noClear"]) {
-                    clear(t.front);
-                    clear(t.history);
+            // A normal target is fully overwritten by its non-component
+            // pass. Only component targets need a blank front buffer so their
+            // untouched channels survive the component copy. History is never
+            // read unless noClear is enabled.
+            let component_targets: std::collections::HashSet<&str> = self
+                .passes
+                .iter()
+                .filter(|pass| pass.component)
+                .map(|pass| pass.output.as_str())
+                .collect();
+            for (name, t) in &mut s.targets {
+                let no_clear = flag(&t.spec["noClear"]);
+                if backwards || !no_clear {
+                    if backwards || component_targets.contains(name.as_str()) {
+                        clear(t.front);
+                    }
+                    if no_clear {
+                        clear(t.history);
+                    }
                 } else if repeated {
                     copy(&self.copy, t.history.texture, t.front);
                 } else {
