@@ -511,7 +511,7 @@ impl Skin {
                 let no_clear = flag(&t.spec["noClear"]);
                 if backwards || !no_clear {
                     let needs_blank_front = backwards
-                        || self.passes.iter().any(|pass| pass.component && pass.output == *name);
+                        || self.passes.iter().any(|pass| pass.component && pass.output.as_str() == name.as_str());
                     if needs_blank_front {
                         clear(t.front);
                     }
