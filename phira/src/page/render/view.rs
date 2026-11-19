@@ -331,7 +331,7 @@ impl RenderPage {
                     ui,
                     &mut y,
                     width,
-                    &format!("{}   {:.1}%   {frame}/{total} {}   {} {eta}", renderer.stage().map_or(tl!("render-rendering").into_owned(), |stage| stage.label().to_owned()), p * 100., tl!("render-frames"), tl!("render-eta") tl!("render-frames"), tl!("render-eta")),
+                    &format!("{}   {:.1}%   {frame}/{total} {}   {} {eta}", renderer.stage().map_or(tl!("render-rendering").into_owned(), |stage| stage.label().to_owned()), p * 100., tl!("render-frames"), tl!("render-eta")),
                     SMALL,
                     WHITE,
                 );
@@ -343,7 +343,7 @@ impl RenderPage {
                 y += 0.02;
             }
             Job::Done { path, frames, secs } => {
-                paragraph(ui, &mut y, width, &format!("{} {frames} {} {}", tl!("render-complete"), tl!("render-frames"), tl!("render-time"), fmt_duration(*secs)), SMALL, WHITE);
+                paragraph(ui, &mut y, width, &format!("{} {frames} {} {} {}", tl!("render-complete"), tl!("render-frames"), tl!("render-time"), fmt_duration(*secs)), SMALL, WHITE);
                 paragraph(ui, &mut y, width, path, SMALL, semi_white(0.65));
             }
             Job::Failed(err) => paragraph(ui, &mut y, width, &format!("{}: {err}", tl!("render-failed")), SMALL, Color::new(1., 0.6, 0.55, 1.)),
