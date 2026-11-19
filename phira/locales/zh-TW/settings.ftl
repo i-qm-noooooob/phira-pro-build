@@ -588,3 +588,12 @@ render-default-output-folder = 此平台使用默认视频输出目录
 render-page-label = 谱面渲染
 render-settings-not-saved = 设置未保存
 render-field-requires-picker = 该设置需要选择文件、目录或资源包
+
+render-pack-id-invalid = 资源包标识无效，请重新选择渲染资源包
+render-pack-file-missing = 资源包已移除或不可读取，请重新选择渲染资源包
+render-pack-info-invalid = 资源包信息无效，请重新选择渲染资源包
+render-game-pack-removed = 游玩资源包已移除，请重新选择游玩或渲染资源包
+render-selected-pack-removed = 渲染资源包已移除，请重新选择
+render-current-pack-unavailable = 资源包不可用
+render-builtin-phira = 内置 Phira
+render-follow-game-settings-with-pack = 跟随游玩设置（{ $name }）
