@@ -64,7 +64,7 @@
       },
       "constants": {
         "passWeight": 0.458567970132,
-        "firstPass": 1.0
+        "firstPass": 1
       }
     },
     {
@@ -76,7 +76,7 @@
       },
       "constants": {
         "passWeight": 0.282861223139,
-        "firstPass": 0.0
+        "firstPass": 0
       }
     },
     {
@@ -88,7 +88,7 @@
       },
       "constants": {
         "passWeight": 0.156589227109,
-        "firstPass": 0.0
+        "firstPass": 0
       }
     },
     {
@@ -100,26 +100,14 @@
       },
       "constants": {
         "passWeight": 0.07305908496,
-        "firstPass": 0.0
-      }
-    },
-    {
-      "shader": "glow.glsl",
-      "output": "pingA",
-      "inputs": {
-        "mainTex": "pingB",
-        "composeRT": "activeCompose"
-      },
-      "constants": {
-        "passWeight": 0.024947807942,
-        "firstPass": 0.0
+        "firstPass": 0
       }
     },
     {
       "shader": "glowExtract.glsl",
       "output": "effects.g",
       "inputs": {
-        "mainTex": "pingA"
+        "mainTex": "pingB"
       }
     },
     {
