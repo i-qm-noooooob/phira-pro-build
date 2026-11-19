@@ -490,3 +490,4 @@ render-select-output-folder = Select video output folder
 render-default-output-folder = This platform uses the default video output folder.
 render-page-label = Chart rendering
 render-settings-not-saved = Settings were not saved
+render-field-requires-picker = This setting requires selecting a file, folder, or resource pack
