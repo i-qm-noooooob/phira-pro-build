@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[path = "block_next_mask.rs"]
 mod next;
 
-#[cfg(any(target_os = "windows", target_os = "ios"))]
+#[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
 static MASK_WORKERS: Lazy<Option<rayon::ThreadPool>> = Lazy::new(|| {
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(2));
     (threads > 1)
@@ -22,14 +22,14 @@ static MASK_WORKERS: Lazy<Option<rayon::ThreadPool>> = Lazy::new(|| {
 });
 
 pub(super) fn prepare_workers() {
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     Lazy::force(&MASK_WORKERS);
 }
 
 // Row ownership is disjoint. Workers read only the completed Compose plane;
 // every GL call, texture upload and input evaluation stays on the main thread.
 fn warp_rows(rgba: &mut [u8], active: &mut [u64], width: usize, stride: usize, apply: impl Fn((usize, (&mut [u8], &mut [u64]))) + Sync + Send) {
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     if rgba.len() >= 400_000 {
         if let Some(pool) = &*MASK_WORKERS {
             use rayon::prelude::*;
@@ -63,7 +63,7 @@ fn prefix_rows(plane: &mut [u8], diff: &[i32], width: usize, curve: Option<(&[u8
             }
         }
     };
-    #[cfg(any(target_os = "windows", target_os = "ios"))]
+    #[cfg(any(target_os = "windows", target_os = "ios", target_os = "android"))]
     if plane.len() >= 100_000 {
         if let Some(pool) = &*MASK_WORKERS {
             use rayon::prelude::*;
