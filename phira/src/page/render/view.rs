@@ -39,7 +39,7 @@ impl RenderPage {
                 .unwrap_or((&fallback_name, &fallback_subtitle));
             self.pick.build(ui, t, r, |ui, path| {
                 ui.fill_path(&path, semi_black(0.30));
-                ui.text(&name)
+                ui.text(name)
                     .pos(r.x + 0.016, r.y + 0.012)
                     .size(0.41)
                     .no_baseline()
@@ -192,18 +192,14 @@ impl RenderPage {
                 }
             }
             #[cfg(not(target_os = "windows"))]
-            paragraph(
-                ui,
-                &mut y,
-                width,
-                if cfg!(target_os = "android") {
-                    tl!("render-ffmpeg-bundled").as_ref()
+            {
+                let ffmpeg_help = if cfg!(target_os = "android") {
+                    tl!("render-ffmpeg-bundled").into_owned()
                 } else {
-                    tl!("render-ffmpeg-system").as_ref()
-                },
-                SMALL,
-                semi_white(0.65),
-            );
+                    tl!("render-ffmpeg-system").into_owned()
+                };
+                paragraph(ui, &mut y, width, &ffmpeg_help, SMALL, semi_white(0.65));
+            }
         }
         (width, y + 0.02)
     }
