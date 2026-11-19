@@ -242,7 +242,7 @@ pub fn input_value(p: &Prefs, field: Field) -> String {
     }
 }
 
-pub fn is_on_value(value: &str) -> bool { value == tl!("render-value-on").as_ref() }
+pub fn is_on_value(value: &str) -> bool { let on = tl!("render-value-on").into_owned(); value == on.as_str() }
 
 pub fn enabled(p: &Prefs, field: Field) -> bool {
     match field {
