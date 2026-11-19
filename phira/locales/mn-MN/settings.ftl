@@ -482,3 +482,11 @@ render-eta = Remaining
 render-complete = Completed
 render-time = in
 render-failed = Render failed
+
+render-install-ffmpeg = Install FFmpeg on the Output page and wait for detection to finish.
+render-select-chart-first = Please select a chart first.
+render-output-name-failed = Unable to create the video file name.
+render-select-output-folder = Select video output folder
+render-default-output-folder = This platform uses the default video output folder.
+render-page-label = Chart rendering
+render-settings-not-saved = Settings were not saved
