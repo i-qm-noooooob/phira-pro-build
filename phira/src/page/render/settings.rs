@@ -210,7 +210,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::ResetAvatar => tl!("render-value-reset-default").into_owned(),
         Field::Rks => r.rks.map(|v| format!("{v:.2}")).unwrap_or_else(|| tl!("render-value-hidden").into_owned()),
         Field::Challenge => text(&r.challenge),
-        Field::ChallengeColor => [tl!("render-color-neutral"), tl!("render-color-green"), tl!("render-color-blue"), tl!("render-color-red"), tl!("render-color-gold"), tl!("render-color-rainbow")][r.challenge_color.min(5)].into_owned(),
+        Field::ChallengeColor => [tl!("render-color-neutral"), tl!("render-color-green"), tl!("render-color-blue"), tl!("render-color-red"), tl!("render-color-gold"), tl!("render-color-rainbow")][r.challenge_color.min(5)].to_string(),
         Field::ScoreIncrease => text(&r.score_increase),
         Field::CollectedTitle => text(&r.collected_title),
         Field::CollectedText => text(&r.collected_text),
