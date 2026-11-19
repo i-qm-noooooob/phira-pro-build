@@ -120,13 +120,6 @@
       }
     },
     {
-      "shader": "ready.glsl",
-      "output": "$screen",
-      "inputs": {
-        "composeRT": "disabledCompose"
-      }
-    },
-    {
       "shader": "copy.glsl",
       "output": "sceneColor",
       "inputs": {
