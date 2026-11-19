@@ -278,10 +278,18 @@ void main() {
     vec2 maskSize = max(floor(screenSize / max(maskPixelScale, 1.0)), vec2(1.0));
     vec2 maskUV = (floor(uv * maskSize) + 0.5) / maskSize;
     float maskWord = floor(texture2D(blockMask, maskUV).r * 255.0 + 0.5);
-    float dn = nfBit(maskWord, 4.0);
-    float ds = nfBit(maskWord, 5.0);
     float ready = texture2D(readyComposeRT, uv).r;
-    float rd = ready * abs(ds - dn);
+    float rd = 0.0;
+    // Ready coverage is usually empty outside chart objects. Avoid the
+    // additional packed-mask fetch unless the Ready compose has coverage.
+    if (ready > 0.0001) {
+        vec2 maskSize = max(floor(screenSize / max(maskPixelScale, 1.0)), vec2(1.0));
+        vec2 maskUV = (floor(uv * maskSize) + 0.5) / maskSize;
+        float maskWord = floor(texture2D(blockMask, maskUV).r * 255.0 + 0.5);
+        float dn = nfBit(maskWord, 4.0);
+        float ds = nfBit(maskWord, 5.0);
+        rd = ready * abs(ds - dn);
+    }
 
     float sum = glow + edge + comp;
     float hover = texture2D(touchHoverRT, uv).r;
