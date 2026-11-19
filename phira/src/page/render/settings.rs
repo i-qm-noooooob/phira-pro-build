@@ -346,7 +346,7 @@ fn change_inner(p: &mut Prefs, field: Field, input: Option<&str>) -> Result<()> 
         Field::EndingDelay => a.ending_delay_seconds = input.parse()?,
         Field::Fade => a.fade_seconds = input.parse()?,
         Field::ResetFont => presentation.font = None,
-        Field::Directory | Field::Avatar | Field::Font | Field::ResourcePack => bail!("该设置需要选择文件、目录或资源包"),
+        Field::Directory | Field::Avatar | Field::Font | Field::ResourcePack => bail!(tl!("render-field-requires-picker")),
     }
     p.presentation.validate()
 }
