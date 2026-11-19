@@ -18,14 +18,16 @@
       "filter": "linear"
     },
     "pingA": {
-      "scaleX": 0.25,
-      "scaleY": 0.25,
-      "format": "rg8"
+      "scaleX": 0.16666666666666666,
+      "scaleY": 0.16666666666666666,
+      "format": "rg8",
+      "filter": "linear"
     },
     "pingB": {
-      "scaleX": 0.25,
-      "scaleY": 0.25,
-      "format": "rg8"
+      "scaleX": 0.16666666666666666,
+      "scaleY": 0.16666666666666666,
+      "format": "rg8",
+      "filter": "linear"
     },
     "sceneColor": {
       "scaleX": 0.16666666666666666,
