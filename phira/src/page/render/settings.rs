@@ -151,11 +151,10 @@ pub fn value(p: &Prefs, field: Field) -> String {
             super::resource_pack::Selection::Imported(_) => tl!("render-value-imported-pack").into_owned(),
         },
         Field::OffsetIndicator => match p.visuals.offset_indicator {
-            None => return tl!("render-value-follow-gameplay-hud").into_owned(),
-            Some(true) => return tl!("render-value-on").into_owned(),
-            Some(false) => return tl!("render-value-off").into_owned(),
-        }
-        .into(),
+            None => tl!("render-value-follow-gameplay-hud").into_owned(),
+            Some(true) => tl!("render-value-on").into_owned(),
+            Some(false) => tl!("render-value-off").into_owned(),
+        },
         Field::ApFcIndicator => flag(p.visuals.ap_fc_indicator),
         Field::DoubleHint => flag(p.visuals.double_hint),
         Field::Particle => flag(p.visuals.particle),
@@ -236,10 +235,12 @@ pub fn value(p: &Prefs, field: Field) -> String {
 
 pub fn input_value(p: &Prefs, field: Field) -> String {
     let text = value(p, field);
+    let follow_default = tl!("render-value-follow-default").into_owned();
+    let seconds_suffix = format!(" {}", tl!("render-unit-seconds"));
     match field {
         Field::Rks if p.presentation.result.rks.is_none() => String::new(),
-        _ if text == tl!("render-value-follow-default") => String::new(),
-        _ => text.trim_end_matches(&format!(" {}", tl!("render-unit-seconds"))).trim_end_matches('%').to_owned(),
+        _ if text == follow_default => String::new(),
+        _ => text.trim_end_matches(seconds_suffix.as_str()).trim_end_matches('%').to_owned(),
     }
 }
 
