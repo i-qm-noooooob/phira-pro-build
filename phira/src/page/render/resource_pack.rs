@@ -4,6 +4,7 @@ use anyhow::{ensure, Context, Result};
 use prpr::core::ResPackInfo;
 use serde::{Deserialize, Serialize};
 use std::path::{Component, Path};
+prpr_l10n::tl_file!("settings");
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -21,13 +22,13 @@ pub(super) struct Choice {
 
 fn pack_path(root: &Path, id: &str) -> Result<std::path::PathBuf> {
     let mut components = Path::new(id).components();
-    ensure!(matches!(components.next(), Some(Component::Normal(_))) && components.next().is_none(), "资源包标识无效，请重新选择渲染资源包");
+    ensure!(matches!(components.next(), Some(Component::Normal(_))) && components.next().is_none(), tl!("render-pack-id-invalid"));
     Ok(root.join(id))
 }
 
 fn info(root: &Path, id: &str) -> Result<ResPackInfo> {
-    let file = std::fs::File::open(pack_path(root, id)?.join("info.yml")).context("资源包已移除或不可读取，请重新选择渲染资源包")?;
-    let info: ResPackInfo = serde_yaml::from_reader(file).context("资源包信息无效，请重新选择渲染资源包")?;
+    let file = std::fs::File::open(pack_path(root, id)?.join("info.yml")).context(tl!("render-pack-file-missing"))?;
+    let info: ResPackInfo = serde_yaml::from_reader(file).context(tl!("render-pack-info-invalid"))?;
     info.verify()?;
     Ok(info)
 }
@@ -40,9 +41,9 @@ impl Selection {
             Self::FollowGame => data
                 .respacks
                 .get(data.respack_id - 1)
-                .context("游玩资源包已移除，请重新选择游玩或渲染资源包")?,
+                .context(tl!("render-game-pack-removed"))?,
             Self::Imported(id) => {
-                ensure!(data.respacks.contains(id), "渲染资源包已移除，请重新选择");
+                ensure!(data.respacks.contains(id), tl!("render-selected-pack-removed"));
                 id
             }
         };
@@ -56,16 +57,16 @@ pub(super) fn choices(data: &Data, root: &Path, selected: &Selection) -> Vec<Cho
         .respack_id
         .checked_sub(1)
         .and_then(|i| data.respacks.get(i))
-        .map(|id| info(root, id).map(|info| info.name).unwrap_or_else(|_| "资源包不可用".into()))
-        .unwrap_or_else(|| "内置 Phira".into());
+        .map(|id| info(root, id).map(|info| info.name).unwrap_or_else(|_| tl!("render-current-pack-unavailable").into_owned()))
+        .unwrap_or_else(|| tl!("render-builtin-phira").into_owned());
     let mut choices = vec![
         Choice {
             selection: Selection::FollowGame,
-            label: format!("跟随游玩设置（{current}）"),
+            label: tl!("render-follow-game-settings-with-pack", "name" => current),
         },
         Choice {
             selection: Selection::Builtin,
-            label: "内置默认（Phira）".into(),
+            label: tl!("render-value-builtin-default").into_owned(),
         },
     ];
     for id in &data.respacks {
@@ -79,7 +80,7 @@ pub(super) fn choices(data: &Data, root: &Path, selected: &Selection) -> Vec<Cho
     if !choices.iter().any(|choice| &choice.selection == selected) {
         choices.push(Choice {
             selection: selected.clone(),
-            label: "已选资源包不可用，请重新选择".into(),
+            label: tl!("render-pack-unavailable").into_owned(),
         });
     }
     choices
@@ -116,7 +117,7 @@ mod tests {
         assert_eq!(follow.resolve(&data, root.path()).unwrap(), None);
         std::fs::remove_file(root.path().join("skin-b/info.yml")).unwrap();
         assert!(fixed.resolve(&data, root.path()).is_err());
-        assert!(choices(&data, root.path(), &fixed).last().unwrap().label.contains("不可用"));
+        assert_eq!(choices(&data, root.path(), &fixed).last().unwrap().label, tl!("render-pack-unavailable"));
         data.respacks.clear();
         assert!(fixed.resolve(&data, root.path()).is_err());
         assert!(pack_path(root.path(), "../skin").is_err());
