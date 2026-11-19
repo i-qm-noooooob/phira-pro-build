@@ -135,7 +135,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
     let r = &presentation.result;
     let a = &presentation.audio;
     fn flag(value: bool) -> String {
-        if value { tl!("render-value-on") } else { tl!("render-value-off") }.into_owned()
+        if value { tl!("render-value-on").into_owned() } else { tl!("render-value-off").into_owned() }
     }
     fn text(value: &str) -> String {
         if value.is_empty() {
@@ -166,8 +166,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
             tl!("render-value-font-selected").into_owned()
         } else {
             tl!("render-value-builtin-font").into_owned()
-        }
-        .into(),
+        },
         Field::ResetFont => tl!("render-value-reset-default").into_owned(),
         Field::Resolution => {
             let (w, h) = RESOLUTIONS[p.res.min(RESOLUTIONS.len() - 1)];
@@ -187,8 +186,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
             tl!("render-value-phira-hud").into_owned()
         } else {
             tl!("render-value-chart-only").into_owned()
-        }
-        .into(),
+        },
         Field::Opening => flag(presentation.opening),
         Field::Playing => flag(presentation.playing),
         Field::Ending => flag(presentation.ending),
@@ -208,7 +206,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::Tip => text(&m.tip),
         Field::Loading => text(&m.loading_text),
         Field::Player => text(&r.player_name),
-        Field::Avatar => if r.avatar.is_some() { tl!("render-value-image-selected") } else { tl!("render-value-builtin-avatar") }.into_owned(),
+        Field::Avatar => if r.avatar.is_some() { tl!("render-value-image-selected").into_owned() } else { tl!("render-value-builtin-avatar").into_owned() },
         Field::ResetAvatar => tl!("render-value-reset-default").into_owned(),
         Field::Rks => r.rks.map(|v| format!("{v:.2}")).unwrap_or_else(|| tl!("render-value-hidden").into_owned()),
         Field::Challenge => text(&r.challenge),
@@ -216,7 +214,7 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::ScoreIncrease => text(&r.score_increase),
         Field::CollectedTitle => text(&r.collected_title),
         Field::CollectedText => text(&r.collected_text),
-        Field::ResultSource => if r.custom { tl!("render-value-custom-display") } else { tl!("render-value-auto-statistics") }.into_owned(),
+        Field::ResultSource => if r.custom { tl!("render-value-custom-display").into_owned() } else { tl!("render-value-auto-statistics").into_owned() },
         Field::Score => r.score.to_string(),
         Field::Accuracy => format!("{:.2}%", r.accuracy),
         Field::Combo => r.max_combo.to_string(),
