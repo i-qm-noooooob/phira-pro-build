@@ -4,6 +4,7 @@ use prpr::{
     ui::Ui,
 };
 use settings::{Category, Field, Kind};
+prpr_l10n::tl_file!("settings");
 
 const GAP: f32 = 0.012;
 const BODY: f32 = 0.38;
@@ -29,11 +30,13 @@ impl RenderPage {
             let layout = layout::Layout::new(ui.content_rect());
             ui.fill_path(&layout.outer.rounded(0.012), semi_black(0.55));
             let r = layout.chart;
+            let fallback_name = tl!("render-pick-chart").into_owned();
+            let fallback_subtitle = tl!("render-pick-chart-help").into_owned();
             let (name, subtitle) = self
                 .selected
                 .as_ref()
                 .map(|v| (v.name.as_str(), v.subtitle.as_str()))
-                .unwrap_or(("选择要渲染的谱面", "从谱面库选择，展示文字可在开场分类中单独设置"));
+                .unwrap_or((&fallback_name, &fallback_subtitle));
             self.pick.build(ui, t, r, |ui, path| {
                 ui.fill_path(&path, semi_black(0.30));
                 ui.text(&name)
@@ -49,7 +52,7 @@ impl RenderPage {
                     .max_width(r.w - 0.20)
                     .color(semi_white(0.65))
                     .draw();
-                ui.text(if self.selected.is_some() { "更换" } else { "选择" })
+                ui.text(if self.selected.is_some() { tl!("render-change").into_owned() } else { tl!("render-select").into_owned() })
                     .pos(r.right() - 0.025, r.center().y)
                     .anchor(1., 0.5)
                     .no_baseline()
@@ -99,9 +102,9 @@ impl RenderPage {
                 layout.footer[1],
                 t,
                 if cfg!(target_os = "android") {
-                    "保存到下载目录"
+                    tl!("render-save-download").as_ref()
                 } else {
-                    "打开输出目录"
+                    tl!("render-open-output").as_ref()
                 },
                 BODY,
                 false,
@@ -116,15 +119,15 @@ impl RenderPage {
         let mut y = 0.;
         let overview = self.category == Category::Overview;
         let count = settings::FIELDS.iter().filter(|f| overview || f.info().0 == self.category).count();
-        paragraph(ui, &mut y, width, &format!("{}  /  {} 项", self.category.label(), count), 0.40, WHITE);
+        paragraph(ui, &mut y, width, &format!("{}  /  {} {}", self.category.label(), count, tl!("render-item-count")), 0.40, WHITE);
         if self.busy() {
-            paragraph(ui, &mut y, width, "正在按当前设置渲染，完成或取消后可修改。", SMALL, semi_white(0.65));
+            paragraph(ui, &mut y, width, tl!("render-busy-help").as_ref(), SMALL, semi_white(0.65));
         } else if overview {
-            paragraph(ui, &mut y, width, "当前所有参数。切换上方分类即可编辑。", SMALL, semi_white(0.65));
+            paragraph(ui, &mut y, width, tl!("render-overview-help").as_ref(), SMALL, semi_white(0.65));
         } else if self.category == Category::Flow {
-            paragraph(ui, &mut y, width, "开场 → 游玩入场 → 谱面 → 游玩退场 → 结算", SMALL, semi_white(0.65));
+            paragraph(ui, &mut y, width, tl!("render-flow-help").as_ref(), SMALL, semi_white(0.65));
         } else if self.category == Category::Ending {
-            paragraph(ui, &mut y, width, "头像、玩家信息及自定义统计仅用于视频展示。", SMALL, semi_white(0.65));
+            paragraph(ui, &mut y, width, tl!("render-results-help").as_ref(), SMALL, semi_white(0.65));
         }
         let columns = if width >= 1.35 { 2 } else { 1 };
         let column_w = (width - GAP * (columns - 1) as f32) / columns as f32;
@@ -175,7 +178,7 @@ impl RenderPage {
         }
         if self.category == Category::Output {
             y += 0.015;
-            paragraph(ui, &mut y, width, "视频编码器", BODY, WHITE);
+            paragraph(ui, &mut y, width, tl!("render-video-encoder").as_ref(), BODY, WHITE);
             #[cfg(target_os = "windows")]
             {
                 paragraph(ui, &mut y, width, &self.ffmpeg.description(), SMALL, semi_white(0.75));
@@ -194,9 +197,9 @@ impl RenderPage {
                 &mut y,
                 width,
                 if cfg!(target_os = "android") {
-                    "已内置 FFmpeg"
+                    tl!("render-ffmpeg-bundled").as_ref()
                 } else {
-                    "使用系统 FFmpeg"
+                    tl!("render-ffmpeg-system").as_ref()
                 },
                 SMALL,
                 semi_white(0.65),
@@ -211,7 +214,7 @@ impl RenderPage {
                 .iter()
                 .find(|choice| choice.selection == self.prefs.resource_pack)
                 .map(|choice| choice.label.clone())
-                .unwrap_or_else(|| "资源包不可用，请重新选择".into())
+                .unwrap_or_else(|| tl!("render-pack-unavailable").into_owned())
         } else {
             settings::value(&self.prefs, field)
         }
@@ -296,7 +299,7 @@ impl RenderPage {
         } else {
             let busy = self.busy();
             let button = &mut self.fields[field as usize];
-            let caption = if kind == Kind::Folder { "更改目录" } else { &value };
+            let caption = if kind == Kind::Folder { tl!("render-change-folder").into_owned() } else { value.clone() };
             let chosen = kind == Kind::Toggle && settings::is_on_value(&value);
             ui.alpha(if busy { 0.5 } else { alpha }, |ui| button.render_text(ui, control, t, caption, 0.34, chosen));
             if !enabled || busy {
@@ -313,8 +316,8 @@ impl RenderPage {
     fn render_status(&mut self, ui: &mut Ui, width: f32) -> (f32, f32) {
         let mut y = 0.;
         match &self.job {
-            Job::Idle => paragraph(ui, &mut y, width, "选择谱面和画面预设后开始导出。视频按固定帧率渲染，过程不播放声音。", SMALL, semi_white(0.65)),
-            Job::Loading(_) => paragraph(ui, &mut y, width, "正在加载谱面并合成视频音轨…", BODY, WHITE),
+            Job::Idle => paragraph(ui, &mut y, width, tl!("render-idle-status").as_ref(), SMALL, semi_white(0.65)),
+            Job::Loading(_) => paragraph(ui, &mut y, width, tl!("render-loading-status").as_ref(), BODY, WHITE),
             Job::Rendering { renderer, started } => {
                 let (frame, total) = renderer.progress();
                 let p = if total > 0 { frame as f32 / total as f32 } else { 0. }.clamp(0., 1.);
@@ -322,7 +325,7 @@ impl RenderPage {
                 let eta = if frame > 0 {
                     fmt_duration(elapsed / frame as f64 * total.saturating_sub(frame) as f64)
                 } else {
-                    "计算中".into()
+                    tl!("render-calculating").into_owned()
                 };
                 paragraph(
                     ui,
