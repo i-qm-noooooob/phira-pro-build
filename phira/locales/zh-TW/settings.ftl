@@ -590,3 +590,4 @@ render-select-output-folder = 选择视频输出目录
 render-default-output-folder = 此平台使用默认视频输出目录
 render-page-label = 谱面渲染
 render-settings-not-saved = 设置未保存
+render-field-requires-picker = 该设置需要选择文件、目录或资源包
