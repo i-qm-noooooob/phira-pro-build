@@ -2152,10 +2152,10 @@ impl DebugList {
         }
         let rr = right_rect(w);
 
-        for (i, label) in [tl!("tools-diagnostics"), tl!("tools-chart-render"), tl!("tools-chart-editor"), tl!("tools-hotkey-manager")].iter().enumerate() {
+        for (i, label) in [tl!("tools-diagnostics"), tl!("tools-chart-render"), tl!("tools-chart-editor"), tl!("tools-hotkey-manager")].into_iter().enumerate() {
             search::focus(ui, label);
             render_title(ui, label, None);
-            self.tools[i].render_text(ui, rr, t, &tl!("tools-open"), 0.4, false);
+            self.tools[i].render_text(ui, rr, t, tl!("tools-open"), 0.4, false);
             ui.dy(item_row_h());
             h += item_row_h();
         }
