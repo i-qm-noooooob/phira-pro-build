@@ -691,3 +691,7 @@ render-selected-pack-removed = 渲染资源包已移除，请重新选择
 render-current-pack-unavailable = 资源包不可用
 render-builtin-phira = 内置 Phira
 render-follow-game-settings-with-pack = 跟随游玩设置（{ $name }）
+
+settings-search-no-results = 没有匹配的设置
+settings-search-diagnostics = 问题诊断
+settings-search-hotkeys = 热键管理
