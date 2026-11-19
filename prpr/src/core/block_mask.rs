@@ -128,7 +128,7 @@ pub(super) struct Masks {
 // covers the same screen area; only the mask sampling grid is 10% smaller
 // on each axis (about 19% fewer mask pixels). Other platforms stay exact.
 fn effect_dimensions(width: usize, height: usize) -> (usize, usize) {
-    let (width, height) = effect_dimensions(width, height);
+    let (width, height) = ((width / 8).max(1) * 2, (height / 8).max(1) * 2);
     #[cfg(target_os = "android")]
     {
         ((width * 9 / 10).max(1), (height * 9 / 10).max(1))
