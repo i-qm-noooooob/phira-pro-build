@@ -96,7 +96,7 @@ impl RenderPage {
             });
             self.status_scroll = status_scroll;
             self.start
-                .render_text(ui, layout.footer[0], t, if self.busy() { "取消渲染" } else { "开始渲染" }, BODY, true);
+                .render_text(ui, layout.footer[0], t, if self.busy() { tl!("render-cancel").as_ref() } else { tl!("render-start").as_ref() }, BODY, true);
             self.open.render_text(
                 ui,
                 layout.footer[1],
@@ -331,7 +331,7 @@ impl RenderPage {
                     ui,
                     &mut y,
                     width,
-                    &format!("{}   {:.1}%   {frame}/{total} 帧   预计剩余 {eta}", renderer.stage().map_or("渲染中", |stage| stage.label()), p * 100.),
+                    &format!("{}   {:.1}%   {frame}/{total} {}   {} {eta}", renderer.stage().map_or(tl!("render-rendering").into_owned(), |stage| stage.label().to_owned()), p * 100., tl!("render-frames"), tl!("render-eta")),
                     SMALL,
                     WHITE,
                 );
@@ -343,10 +343,10 @@ impl RenderPage {
                 y += 0.02;
             }
             Job::Done { path, frames, secs } => {
-                paragraph(ui, &mut y, width, &format!("完成 {frames} 帧，用时 {}", fmt_duration(*secs)), SMALL, WHITE);
+                paragraph(ui, &mut y, width, &format!("{} {frames} {} {}", tl!("render-complete"), tl!("render-frames"), tl!("render-time"), fmt_duration(*secs)), SMALL, WHITE);
                 paragraph(ui, &mut y, width, path, SMALL, semi_white(0.65));
             }
-            Job::Failed(err) => paragraph(ui, &mut y, width, &format!("渲染失败：{err}"), SMALL, Color::new(1., 0.6, 0.55, 1.)),
+            Job::Failed(err) => paragraph(ui, &mut y, width, &format!("{}: {err}", tl!("render-failed")), SMALL, Color::new(1., 0.6, 0.55, 1.)),
         }
         (width, y + 0.005)
     }
