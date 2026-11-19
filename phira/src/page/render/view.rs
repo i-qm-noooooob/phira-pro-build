@@ -301,7 +301,7 @@ impl RenderPage {
             let button = &mut self.fields[field as usize];
             let caption = if kind == Kind::Folder { tl!("render-change-folder").into_owned() } else { value.clone() };
             let chosen = kind == Kind::Toggle && settings::is_on_value(&value);
-            ui.alpha(if busy { 0.5 } else { alpha }, |ui| button.render_text(ui, control, t, caption, 0.34, chosen));
+            ui.alpha(if busy { 0.5 } else { alpha }, |ui| button.render_text(ui, control, t, &caption, 0.34, chosen));
             if !enabled || busy {
                 button.invalidate();
             }
