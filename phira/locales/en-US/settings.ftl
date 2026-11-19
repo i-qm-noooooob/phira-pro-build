@@ -805,3 +805,7 @@ render-field-hitsound-volume-help = 0–2; independent of music volume
 render-field-ending-volume-help = 0–2; uses the selected resource pack's results music
 render-field-ending-delay-help = 0–10 seconds, relative to the start of the results screen
 render-field-fade-help = 0–5 seconds, applied to music segments and results music
+
+settings-search-no-results = No matching settings
+settings-search-diagnostics = Diagnostics
+settings-search-hotkeys = Hotkey management
