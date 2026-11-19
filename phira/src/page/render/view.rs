@@ -52,7 +52,7 @@ impl RenderPage {
                     .max_width(r.w - 0.20)
                     .color(semi_white(0.65))
                     .draw();
-                ui.text(if self.selected.is_some() { tl!("render-change").into_owned() } else { tl!("render-select").into_owned() })
+                ui.text(if self.selected.is_some() { tl!("render-change").as_ref() } else { tl!("render-select").as_ref() })
                     .pos(r.right() - 0.025, r.center().y)
                     .anchor(1., 0.5)
                     .no_baseline()
