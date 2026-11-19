@@ -297,7 +297,7 @@ impl RenderPage {
             let busy = self.busy();
             let button = &mut self.fields[field as usize];
             let caption = if kind == Kind::Folder { "更改目录" } else { &value };
-            let chosen = kind == Kind::Toggle && value == "开启";
+            let chosen = kind == Kind::Toggle && settings::is_on_value(&value);
             ui.alpha(if busy { 0.5 } else { alpha }, |ui| button.render_text(ui, control, t, caption, 0.34, chosen));
             if !enabled || busy {
                 button.invalidate();
