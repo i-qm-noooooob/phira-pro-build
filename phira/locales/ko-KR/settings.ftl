@@ -533,3 +533,12 @@ render-default-output-folder = This platform uses the default video output folde
 render-page-label = Chart rendering
 render-settings-not-saved = Settings were not saved
 render-field-requires-picker = This setting requires selecting a file, folder, or resource pack
+
+render-pack-id-invalid = Invalid resource pack ID. Please select the render resource pack again.
+render-pack-file-missing = Resource pack was removed or cannot be read. Please select it again.
+render-pack-info-invalid = Resource pack information is invalid. Please select the render resource pack again.
+render-game-pack-removed = Gameplay resource pack was removed. Please select a gameplay or render resource pack again.
+render-selected-pack-removed = Render resource pack was removed. Please select it again.
+render-current-pack-unavailable = Resource pack unavailable
+render-builtin-phira = Built-in Phira
+render-follow-game-settings-with-pack = Follow gameplay settings ({ $name })
