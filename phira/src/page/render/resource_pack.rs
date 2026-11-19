@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(follow.resolve(&data, root.path()).unwrap(), None);
         std::fs::remove_file(root.path().join("skin-b/info.yml")).unwrap();
         assert!(fixed.resolve(&data, root.path()).is_err());
-        assert_eq!(choices(&data, root.path(), &fixed).last().unwrap().label, tl!("render-pack-unavailable"));
+        assert_eq!(choices(&data, root.path(), &fixed).last().unwrap().label, tl!("render-pack-unavailable").into_owned());
         data.respacks.clear();
         assert!(fixed.resolve(&data, root.path()).is_err());
         assert!(pack_path(root.path(), "../skin").is_err());
