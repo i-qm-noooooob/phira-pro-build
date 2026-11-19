@@ -36,7 +36,7 @@ impl RenderPage {
                 .unwrap_or(("选择要渲染的谱面", "从谱面库选择，展示文字可在开场分类中单独设置"));
             self.pick.build(ui, t, r, |ui, path| {
                 ui.fill_path(&path, semi_black(0.30));
-                ui.text(name)
+                ui.text(&name)
                     .pos(r.x + 0.016, r.y + 0.012)
                     .size(0.41)
                     .no_baseline()
@@ -66,7 +66,7 @@ impl RenderPage {
                     ui,
                     Rect::new(layout.tabs.x + i as f32 * (tab_w + GAP), layout.tabs.y, tab_w, layout.tabs.h),
                     t,
-                    category.label(),
+                    &category.label(),
                     if tab_w < 0.21 { 0.27 } else { 0.34 },
                     self.category == category,
                 );
@@ -146,7 +146,7 @@ impl RenderPage {
                     row_height = 0.;
                 }
                 y += GAP;
-                paragraph(ui, &mut y, width, category.label(), 0.34, semi_white(0.8));
+                paragraph(ui, &mut y, width, &category.label(), 0.34, semi_white(0.8));
                 last_category = Some(category);
             }
             if col == 0 {
@@ -221,8 +221,8 @@ impl RenderPage {
         let (_, _, name, help) = field.info();
         let control_w = (width * 0.43).min(0.5);
         let label_w = width - control_w - 0.035;
-        let label_h = ui.text(name).size(BODY).no_baseline().max_width(label_w).multiline().measure().h;
-        let help_text = if overview { "" } else { help };
+        let label_h = ui.text(&name).size(BODY).no_baseline().max_width(label_w).multiline().measure().h;
+        let help_text = if overview { "" } else { help.as_str() };
         let help_h = if help_text.is_empty() {
             0.
         } else {
