@@ -284,14 +284,14 @@ impl CoverEditor {
     }
 
     fn image(side: usize, path: &std::path::Path) -> Result<Self> {
-        anyhow::ensure!(std::fs::metadata(path)?.len() <= 32 * 1024 * 1024, "图片不能超过 32 MB");
+        anyhow::ensure!(std::fs::metadata(path)?.len() <= 32 * 1024 * 1024, tl!("cover-image-too-large"));
         let mut reader = image::ImageReader::new(std::io::Cursor::new(std::fs::read(path)?)).with_guessed_format()?;
         let mut limits = image::Limits::default();
         limits.max_alloc = Some(128 * 1024 * 1024);
         limits.max_image_width = Some(8192);
         limits.max_image_height = Some(8192);
         reader.limits(limits);
-        let image = reader.decode().context("无法读取遮挡图片")?;
+        let image = reader.decode().context(tl!("cover-image-read-failed"))?;
         let mut editor = Self::new(side);
         let preview = image.thumbnail(1024, 1024).to_rgba8();
         editor.texture = Some(Texture2D::from_rgba8(preview.width() as u16, preview.height() as u16, preview.as_raw()).into());

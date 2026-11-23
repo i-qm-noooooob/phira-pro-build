@@ -72,7 +72,34 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_CHOOSE_PHOTO = 1002;
     private static final int REQ_EXPORT = 1003;
 
+    static final String EXTRA_EXTERNAL_IMPORT_PATH = "org.flos.phirapro.EXTRA_EXTERNAL_IMPORT_PATH";
+
     private QuadSurface view;
+
+    /**
+     * Consume a chart path delivered by Android's external "Open with" flow.
+     * MainActivity is singleTask, so this must work both after cold creation
+     * and when Android reuses an already-running instance.
+     */
+    private void handleExternalImport(Intent intent) {
+        if (intent == null || !intent.hasExtra(EXTRA_EXTERNAL_IMPORT_PATH)) return;
+        String path = intent.getStringExtra(EXTRA_EXTERNAL_IMPORT_PATH);
+        intent.removeExtra(EXTRA_EXTERNAL_IMPORT_PATH);
+        if (path == null || path.isEmpty() || !new File(path).isFile()) {
+            Log.e(TAG, "External chart import path is missing or unreadable: " + path);
+            return;
+        }
+        Log.i(TAG, "Queueing external chart import: " + path + " (" + new File(path).length() + " bytes)");
+        QuadNative.setChosenFile(path);
+        QuadNative.markImport();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleExternalImport(intent);
+    }
 
     /**
      * 把渲染好的视频发布到系统的「下载」目录。
@@ -190,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
         QuadNative.initializeEnvironment(this);
         QuadNative.activityOnCreate(this);
         Log.i(TAG, "Activity onCreate: native initialization returned");
+        handleExternalImport(getIntent());
     }
 
     @Override

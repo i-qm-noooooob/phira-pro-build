@@ -2,6 +2,7 @@
 use super::{Prefs, FPS_CHOICES, RESOLUTIONS};
 use anyhow::{bail, Result};
 use prpr::chart_video::{PresentationOptions, PresentationStyle};
+prpr_l10n::tl_file!("settings");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Category {
@@ -23,15 +24,15 @@ pub const CATEGORIES: [Category; 7] = [
     Category::Overview,
 ];
 impl Category {
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            Self::Output => "输出",
-            Self::Visuals => "游玩画面",
-            Self::Flow => "演出流程",
-            Self::Opening => "开场",
-            Self::Ending => "结算",
-            Self::Audio => "音频",
-            Self::Overview => "参数总览",
+            Self::Output => tl!("render-category-output").into_owned(),
+            Self::Visuals => tl!("render-category-visuals").into_owned(),
+            Self::Flow => tl!("render-category-flow").into_owned(),
+            Self::Opening => tl!("render-category-opening").into_owned(),
+            Self::Ending => tl!("render-category-ending").into_owned(),
+            Self::Audio => tl!("render-category-audio").into_owned(),
+            Self::Overview => tl!("render-category-overview").into_owned(),
         }
     }
 }
@@ -56,8 +57,15 @@ macro_rules! fields {
         pub enum Field { $($field),* }
         pub const FIELDS: &[Field] = &[$(Field::$field),*];
         impl Field {
-            pub fn info(self) -> (Category, Kind, &'static str, &'static str) {
-                match self { $(Self::$field => (Category::$category, Kind::$kind, $name, $help)),* }
+            pub fn info(self) -> (Category, Kind, String, String) {
+                match self {
+                    $(Self::$field => (
+                        Category::$category,
+                        Kind::$kind,
+                        tl!(concat!("render-field-", stringify!($field), "-name")).into_owned(),
+                        tl!(concat!("render-field-", stringify!($field), "-help")).into_owned()
+                    )),*
+                }
             }
         }
     };
@@ -127,27 +135,26 @@ pub fn value(p: &Prefs, field: Field) -> String {
     let r = &presentation.result;
     let a = &presentation.audio;
     fn flag(value: bool) -> String {
-        if value { "开启" } else { "关闭" }.into()
+        if value { tl!("render-value-on").into_owned() } else { tl!("render-value-off").into_owned() }
     }
     fn text(value: &str) -> String {
         if value.is_empty() {
-            "跟随默认".into()
+            tl!("render-value-follow-default").into_owned()
         } else {
             value.replace('\n', " ")
         }
     }
     match field {
         Field::ResourcePack => match &p.resource_pack {
-            super::resource_pack::Selection::FollowGame => "跟随游玩设置".into(),
-            super::resource_pack::Selection::Builtin => "内置默认（Phira）".into(),
-            super::resource_pack::Selection::Imported(_) => "已导入资源包".into(),
+            super::resource_pack::Selection::FollowGame => tl!("render-value-follow-game-settings").into_owned(),
+            super::resource_pack::Selection::Builtin => tl!("render-value-builtin-default").into_owned(),
+            super::resource_pack::Selection::Imported(_) => tl!("render-value-imported-pack").into_owned(),
         },
         Field::OffsetIndicator => match p.visuals.offset_indicator {
-            None => "跟随主游玩界面",
-            Some(true) => "开启",
-            Some(false) => "关闭",
-        }
-        .into(),
+            None => tl!("render-value-follow-gameplay-hud").into_owned(),
+            Some(true) => tl!("render-value-on").into_owned(),
+            Some(false) => tl!("render-value-off").into_owned(),
+        },
         Field::ApFcIndicator => flag(p.visuals.ap_fc_indicator),
         Field::DoubleHint => flag(p.visuals.double_hint),
         Field::Particle => flag(p.visuals.particle),
@@ -156,12 +163,11 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::PerfectCombo => flag(p.visuals.show_perfect_combo),
         Field::EarlyLate => flag(p.visuals.show_early_late),
         Field::Font => if presentation.font.is_some() {
-            "已选择字体"
+            tl!("render-value-font-selected").into_owned()
         } else {
-            "内置字体"
-        }
-        .into(),
-        Field::ResetFont => "恢复默认".into(),
+            tl!("render-value-builtin-font").into_owned()
+        },
+        Field::ResetFont => tl!("render-value-reset-default").into_owned(),
         Field::Resolution => {
             let (w, h) = RESOLUTIONS[p.res.min(RESOLUTIONS.len() - 1)];
             format!("{w} × {h}")
@@ -175,21 +181,20 @@ pub fn value(p: &Prefs, field: Field) -> String {
             }
         }
         Field::Preset => if presentation.style == PresentationStyle::Phigros {
-            "Phigros 完整演出"
+            tl!("render-value-phigros-presentation").into_owned()
         } else if p.hud {
-            "Phira 游玩界面"
+            tl!("render-value-phira-hud").into_owned()
         } else {
-            "纯谱面"
-        }
-        .into(),
+            tl!("render-value-chart-only").into_owned()
+        },
         Field::Opening => flag(presentation.opening),
         Field::Playing => flag(presentation.playing),
         Field::Ending => flag(presentation.ending),
         Field::Hud => flag(p.hud),
-        Field::OpeningDuration => format!("{} 秒", presentation.opening_seconds),
-        Field::EnterDuration => format!("{} 秒", presentation.enter_seconds),
-        Field::ExitDuration => format!("{} 秒", presentation.exit_seconds),
-        Field::EndingDuration => format!("{} 秒", presentation.ending_seconds),
+        Field::OpeningDuration => format!("{} {}", presentation.opening_seconds, tl!("render-unit-seconds")),
+        Field::EnterDuration => format!("{} {}", presentation.enter_seconds, tl!("render-unit-seconds")),
+        Field::ExitDuration => format!("{} {}", presentation.exit_seconds, tl!("render-unit-seconds")),
+        Field::EndingDuration => format!("{} {}", presentation.ending_seconds, tl!("render-unit-seconds")),
         Field::Title => text(&m.title),
         Field::Composer => text(&m.composer),
         Field::Charter => text(&m.charter),
@@ -201,15 +206,15 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::Tip => text(&m.tip),
         Field::Loading => text(&m.loading_text),
         Field::Player => text(&r.player_name),
-        Field::Avatar => if r.avatar.is_some() { "已选择图片" } else { "内置头像" }.into(),
-        Field::ResetAvatar => "恢复默认".into(),
-        Field::Rks => r.rks.map(|v| format!("{v:.2}")).unwrap_or_else(|| "隐藏".into()),
+        Field::Avatar => if r.avatar.is_some() { tl!("render-value-image-selected").into_owned() } else { tl!("render-value-builtin-avatar").into_owned() },
+        Field::ResetAvatar => tl!("render-value-reset-default").into_owned(),
+        Field::Rks => r.rks.map(|v| format!("{v:.2}")).unwrap_or_else(|| tl!("render-value-hidden").into_owned()),
         Field::Challenge => text(&r.challenge),
-        Field::ChallengeColor => ["中性", "绿色", "蓝色", "红色", "金色", "彩色"][r.challenge_color.min(5)].into(),
+        Field::ChallengeColor => [tl!("render-color-neutral"), tl!("render-color-green"), tl!("render-color-blue"), tl!("render-color-red"), tl!("render-color-gold"), tl!("render-color-rainbow")][r.challenge_color.min(5)].to_string(),
         Field::ScoreIncrease => text(&r.score_increase),
         Field::CollectedTitle => text(&r.collected_title),
         Field::CollectedText => text(&r.collected_text),
-        Field::ResultSource => if r.custom { "自定义展示" } else { "自动演示统计" }.into(),
+        Field::ResultSource => if r.custom { tl!("render-value-custom-display").into_owned() } else { tl!("render-value-auto-statistics").into_owned() },
         Field::Score => r.score.to_string(),
         Field::Accuracy => format!("{:.2}%", r.accuracy),
         Field::Combo => r.max_combo.to_string(),
@@ -221,19 +226,23 @@ pub fn value(p: &Prefs, field: Field) -> String {
         Field::MusicVolume => format!("{:.2}", a.music_volume),
         Field::HitsoundVolume => format!("{:.2}", a.hitsound_volume),
         Field::EndingVolume => format!("{:.2}", a.ending_volume),
-        Field::EndingDelay => format!("{} 秒", a.ending_delay_seconds),
-        Field::Fade => format!("{} 秒", a.fade_seconds),
+        Field::EndingDelay => format!("{} {}", a.ending_delay_seconds, tl!("render-unit-seconds")),
+        Field::Fade => format!("{} {}", a.fade_seconds, tl!("render-unit-seconds")),
     }
 }
 
 pub fn input_value(p: &Prefs, field: Field) -> String {
     let text = value(p, field);
+    let follow_default = tl!("render-value-follow-default").into_owned();
+    let seconds_suffix = format!(" {}", tl!("render-unit-seconds"));
     match field {
         Field::Rks if p.presentation.result.rks.is_none() => String::new(),
-        _ if text == "跟随默认" => String::new(),
-        _ => text.trim_end_matches(" 秒").trim_end_matches('%').to_owned(),
+        _ if text == follow_default => String::new(),
+        _ => text.trim_end_matches(seconds_suffix.as_str()).trim_end_matches('%').to_owned(),
     }
 }
+
+pub fn is_on_value(value: &str) -> bool { let on = tl!("render-value-on").into_owned(); value == on.as_str() }
 
 pub fn enabled(p: &Prefs, field: Field) -> bool {
     match field {
@@ -337,7 +346,7 @@ fn change_inner(p: &mut Prefs, field: Field, input: Option<&str>) -> Result<()> 
         Field::EndingDelay => a.ending_delay_seconds = input.parse()?,
         Field::Fade => a.fade_seconds = input.parse()?,
         Field::ResetFont => presentation.font = None,
-        Field::Directory | Field::Avatar | Field::Font | Field::ResourcePack => bail!("该设置需要选择文件、目录或资源包"),
+        Field::Directory | Field::Avatar | Field::Font | Field::ResourcePack => bail!(tl!("render-field-requires-picker")),
     }
     p.presentation.validate()
 }

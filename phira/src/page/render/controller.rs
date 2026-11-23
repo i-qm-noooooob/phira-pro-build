@@ -1,4 +1,5 @@
 use super::*;
+prpr_l10n::tl_file!("settings");
 use crate::{dir, get_data};
 use anyhow::{Context, Result};
 use prpr::scene::{request_file, request_input, return_file, return_input, show_error, show_message, take_file, take_input};
@@ -90,15 +91,15 @@ impl RenderPage {
         }
         #[cfg(target_os = "windows")]
         if !self.ffmpeg.ready() {
-            show_message("请先在输出页安装 FFmpeg，并等待检测完成");
+            show_message(tl!("render-install-ffmpeg").as_ref());
             self.category = settings::Category::Output;
             return Ok(());
         }
         let Some(chart) = self.chart_path() else {
-            show_message("请先选择谱面");
+            show_message(tl!("render-select-chart-first").as_ref());
             return Ok(());
         };
-        let out = self.output_path().context("无法生成视频文件名")?;
+        let out = self.output_path().context(tl!("render-output-name-failed"))?;
         let options = self.options()?;
         options.validate()?;
         self.job = Job::Loading(Box::pin(ChartVideoRenderer::new(chart, options, out)));
@@ -115,12 +116,12 @@ impl RenderPage {
             ),
             Kind::Folder => {
                 #[cfg(not(any(target_os = "android", target_os = "ios", target_env = "ohos")))]
-                if let Some(path) = rfd::FileDialog::new().set_title("选择视频输出目录").pick_folder() {
+                if let Some(path) = rfd::FileDialog::new().set_title(tl!("render-select-output-folder").as_ref()).pick_folder() {
                     self.prefs.out_dir = path.display().to_string();
                     self.changed();
                 }
                 #[cfg(any(target_os = "android", target_os = "ios", target_env = "ohos"))]
-                show_message("此平台使用默认视频输出目录");
+                show_message(tl!("render-default-output-folder").as_ref());
             }
             Kind::Avatar => request_file("render-avatar"),
             Kind::Font => request_file("render-font"),
@@ -186,7 +187,7 @@ impl Page for RenderPage {
     }
 
     fn label(&self) -> Cow<'static, str> {
-        "谱面渲染".into()
+        tl!("render-page-label")
     }
     fn can_play_bgm(&self) -> bool {
         !self.busy()
@@ -232,7 +233,7 @@ impl Page for RenderPage {
                     match settings::change(&mut self.prefs, field, Some(&text)) {
                         Ok(()) => self.changed(),
                         Err(err) => {
-                            show_message(format!("设置未保存：{err}"));
+                            show_message(format!("{}: {err}", tl!("render-settings-not-saved")));
                         }
                     }
                 }
@@ -323,7 +324,7 @@ impl Page for RenderPage {
             for (i, button) in self.fields.iter_mut().enumerate() {
                 if button.touch(touch, t) {
                     if let Err(err) = self.activate_field(settings::FIELDS[i]) {
-                        show_message(format!("设置未保存：{err}"));
+                        show_message(format!("{}: {err}", tl!("render-settings-not-saved")));
                     }
                     return Ok(true);
                 }

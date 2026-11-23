@@ -503,10 +503,21 @@ impl Skin {
             }
             let repeated = s.clock == Some(res.time);
             let backwards = s.clock.is_none_or(|t| res.time < t);
-            for t in s.targets.values_mut() {
-                if backwards || !flag(&t.spec["noClear"]) {
-                    clear(t.front);
-                    clear(t.history);
+            // A normal target is fully overwritten by its non-component
+            // pass. Only component targets need a blank front buffer so their
+            // untouched channels survive the component copy. History is never
+            // read unless noClear is enabled.
+            for (name, t) in &mut s.targets {
+                let no_clear = flag(&t.spec["noClear"]);
+                if backwards || !no_clear {
+                    let needs_blank_front = backwards
+                        || self.passes.iter().any(|pass| pass.component && pass.output.as_str() == name.as_str());
+                    if needs_blank_front {
+                        clear(t.front);
+                    }
+                    if no_clear {
+                        clear(t.history);
+                    }
                 } else if repeated {
                     copy(&self.copy, t.history.texture, t.front);
                 } else {

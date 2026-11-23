@@ -14,8 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 
-import quad_native.QuadNative;
-
 /** 由系统「打开方式 → 导入到 Phira Pro」拉起（谱面包）。 */
 public class ImportActivity extends AppCompatActivity {
 
@@ -82,9 +80,9 @@ public class ImportActivity extends AppCompatActivity {
             return;
         }
         try {
-            QuadNative.setChosenFile(path);
-            QuadNative.markImport();
-            startActivity(new Intent(this, MainActivity.class));
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra(MainActivity.EXTRA_EXTERNAL_IMPORT_PATH, path);
+            startActivity(intent);
         } catch (Throwable e) {
             Log.e(TAG, "Failed to import", e);
             Toast.makeText(this, R.string.import_read_failed, Toast.LENGTH_LONG).show();
