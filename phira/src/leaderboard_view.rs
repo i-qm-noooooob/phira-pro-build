@@ -118,7 +118,7 @@ fn tab(ui: &mut Ui, btn: &mut DRectButton, r: Rect, t: f32, text: &str, active: 
 
 #[allow(clippy::too_many_arguments)]
 pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, metric: u8, t: f32, controls: &mut Controls) -> Layout {
-    let local = source == 2;
+    let local = source == 1;
     let layout = Layout::new(height, local);
     let tint = Color::new(0.035, 0.04, 0.05, 0.5);
     let opacity = |p: f32| tint.a * p * p * (3. - 2. * p);
