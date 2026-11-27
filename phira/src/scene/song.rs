@@ -858,11 +858,6 @@ impl SongScene {
             if mode != 2 {
                 self.ldb_official_rank_task = Some(Task::new(leaderboard::load_official_rank(id, mode, me)));
             }
-            self.ldb_pro_task = Some(Task::new(leaderboard::load(id, mode, Origin::Pro, Some(me))));
-            if mode != 2 {
-                let metric = if mode == 1 { "stdScore" } else { "score" };
-                self.ldb_rank_task = Some(Task::new(crate::client::pro_player_rank(id, me, metric)));
-            }
         }
     }
 
@@ -1208,20 +1203,8 @@ impl SongScene {
                 rks: it.rks,
                 historic_best: record.map_or(0, |it| it.score as u32),
             });
-            let upload_fn: Option<UploadFn> = Some(Arc::new(move |score: UploadScore| {
-                Task::new(async move {
-                    let resp = crate::client::pro_upload_score(&score).await?;
-                    leaderboard::invalidate(id.unwrap_or(score.chart));
-                    RECORD_ID.store(resp.id as i32, Ordering::Relaxed);
-                    Ok(RecordUpdateState {
-                        best: resp.new_best,
-                        improvement: resp.improvement,
-                    })
-                })
-            }));
-            // 上传门槛：需要有登录账号（未登录不产生上传任务）；能否上传最终由 prpr 侧的
-            // `Config::is_official_play` 决定——改动过判定 / 玩法的对局一律不上传。
-            let upload_fn = upload_fn.filter(|_| get_data().me.is_some() && !config.mods.contains(Mods::PERFECT_SOUND));
+            // 官方公开客户端没有可用的成绩提交接口；禁用私服上传，避免把成绩发往非官方服务。
+            let upload_fn: Option<UploadFn> = None;
             if is_unlock {
                 #[cfg(not(feature = "video"))]
                 {
@@ -1357,9 +1340,8 @@ impl SongScene {
             self.ldb_local_revision = history::revision().wrapping_add(crate::replay::library::revision());
         }
         let source = match self.ldb_source {
-            BoardSource::Pro => 0,
-            BoardSource::Mixed => 1,
-            BoardSource::Local => 2,
+            BoardSource::Pro | BoardSource::Mixed => 0,
+            BoardSource::Local => 1,
         };
         let layout = leaderboard_view::header(ui, width, height, &self.info.name, source, self.ldb_mode, rt, &mut self.ldb_controls);
         if local {
@@ -1393,14 +1375,11 @@ impl SongScene {
                 Rect::new(0.035, layout.ranks_y, width - 0.07, 0.135),
                 &tl!("ldb-my-ranks"),
                 &Self::ldb_rank_text(self.ldb_official_rank),
-                &Self::ldb_rank_text(self.ldb_pro_rank),
             );
         }
-        let pro_pending = self.ldb_pro_task.is_some();
         let official_pending = self.ldb_official_task.is_some();
         let pending = match self.ldb_source {
-            BoardSource::Pro => pro_pending,
-            BoardSource::Mixed => pro_pending || official_pending,
+            BoardSource::Pro | BoardSource::Mixed => official_pending,
             BoardSource::Local => false,
         };
         let note = if local {
@@ -1416,7 +1395,7 @@ impl SongScene {
         } else if self.ldb_source == BoardSource::Mixed {
             tl!("ldb-mixed-hint")
         } else {
-            tl!("ldb-pro-hint")
+            tl!("ldb-official-server")
         };
         leaderboard_view::note(ui, width, layout.note_y, &note);
         let list_height = (height - layout.list_y - 0.02).max(0.12);
@@ -1434,10 +1413,9 @@ impl SongScene {
                     tl!("ldb-loading")
                 } else if get_data().config.offline_mode {
                     tl!("ldb-offline-hint")
-                } else if self.ldb_source == BoardSource::Pro && self.ldb_account.is_none() {
+                } else if self.ldb_source != BoardSource::Local && self.ldb_account.is_none() {
                     tl!("ldb-sign-in-hint")
-                } else if (self.ldb_source == BoardSource::Pro && self.ldb_pro_failed)
-                    || (self.ldb_source == BoardSource::Mixed && (self.ldb_official_failed || self.ldb_pro_failed))
+                } else if self.ldb_source != BoardSource::Local && self.ldb_official_failed
                 {
                     tl!("ldb-load-failed")
                 } else {
@@ -1536,7 +1514,7 @@ impl SongScene {
                                     2 => format!("{:07}", rec.score),
                                     _ => format!("{:.2}%{}", rec.accuracy * 100., if rec.full_combo { " · FC" } else { "" }),
                                 };
-                                let pro = item.origin == Origin::Pro;
+                                let pro = false;
                                 fader.render(ui, rt, |ui| {
                                     leaderboard_view::row(
                                         ui,
@@ -2204,7 +2182,6 @@ impl Scene for SongScene {
                                 leaderboard_view::Action::Source(index) => {
                                     let source = match index {
                                         0 => BoardSource::Pro,
-                                        1 => BoardSource::Mixed,
                                         _ => BoardSource::Local,
                                     };
                                     if self.ldb_source != source {
@@ -3329,7 +3306,7 @@ impl Scene for SongScene {
                 self.ldb_btn.set(ui, Rect::new(0.015, ui.top - s - 0.06, 0.65, s + 0.01));
             } else if self.info.id.is_some() {
                 let entry = Rect::new(r.x, r.y - 0.135, 0.41, 0.115);
-                leaderboard_view::rank_lines(ui, entry, "", &Self::ldb_rank_text(self.ldb_official_rank), &Self::ldb_rank_text(self.ldb_pro_rank));
+                leaderboard_view::rank_lines(ui, entry, "", &Self::ldb_rank_text(self.ldb_official_rank));
                 self.ldb_btn.set(ui, entry);
             } else {
                 let entry = Rect::new(r.x, r.y - 0.09, 0.3, 0.075);
