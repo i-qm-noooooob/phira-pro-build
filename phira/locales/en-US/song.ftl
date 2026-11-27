@@ -164,7 +164,7 @@ ldb-unavailable = Unavailable
 ldb-sign-in = Sign in
 ldb-offline = Offline
 ldb-rank-unsupported = Not available
-ldb-my-ranks = My ranks · each server separately
+ldb-my-ranks = My official rank
 ldb-local-count = { $count } saved plays
 ldb-local-hint = Tap a play to view its details
 ldb-offline-hint = Online boards are unavailable in offline mode
@@ -172,7 +172,7 @@ ldb-accuracy-hint = Accuracy sorts returned records; no accuracy ranks
 ldb-partial-hint = One server is unavailable; showing available records
 ldb-mixed-hint = Best result per player · no combined ranks
 ldb-pro-hint = Pro top 20 · ranks within Pro only
-ldb-sign-in-hint = Sign in to view the Pro board
+ldb-sign-in-hint = Sign in to view the official leaderboard
 ldb-empty = No scores yet
 
 mods-note-behavior = Note behavior
