@@ -16,7 +16,7 @@ pub enum Action {
 }
 
 pub struct Controls {
-    pub sources: [DRectButton; 3],
+    pub sources: [DRectButton; 2],
     pub metrics: [DRectButton; 3],
     pub refresh: DRectButton,
 }
@@ -139,8 +139,8 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
         label(ui, chart, 0.037, 0.103, 0.32, width - 0.09, semi_white(0.5));
     }
     tab(ui, &mut controls.refresh, Rect::new(width - 0.19, 0.025, 0.15, 0.062), t, &board_tl!("ldb-refresh"), false, false);
-    let w = (width - 0.09) / 3.;
-    for (i, key) in ["ldb-pro", "ldb-mixed", "ldb-local-title"].iter().enumerate() {
+    let w = (width - 0.08) / 2.;
+    for (i, key) in ["ldb-official-server", "ldb-local-title"].iter().enumerate() {
         tab(
             ui,
             &mut controls.sources[i],
@@ -171,7 +171,7 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
     layout
 }
 
-pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str, pro: &str) {
+pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str) {
     let accent = ui.accent();
     ui.fill_path(&r.rounded(0.014), semi_white(0.055));
     let compact = r.h < 0.12;
@@ -179,18 +179,16 @@ pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str, pro: &str
     if !compact {
         label(ui, heading, r.x + 0.02, r.y + 0.024, 0.32, r.w - 0.04, semi_white(0.55));
     }
-    for (i, (key, value)) in [("ldb-official-server", official), ("ldb-pro-server", pro)].iter().enumerate() {
-        let y = r.y + top + (i as f32 + 0.5) * (r.h - top) / 2.;
-        label(ui, &board_tl!(*key), r.x + 0.02, y, 0.38, r.w * 0.4, semi_white(0.75));
-        ui.text(*value)
-            .pos(r.right() - 0.02, y)
-            .anchor(1., 0.5)
-            .no_baseline()
-            .size(0.42)
-            .max_width(r.w * 0.55)
-            .color(if value.starts_with('#') { accent } else { semi_white(0.55) })
-            .draw();
-    }
+    let y = r.y + top + (r.h - top) / 2.;
+    label(ui, &board_tl!("ldb-official-server"), r.x + 0.02, y, 0.38, r.w * 0.4, semi_white(0.75));
+    ui.text(official)
+        .pos(r.right() - 0.02, y)
+        .anchor(1., 0.5)
+        .no_baseline()
+        .size(0.42)
+        .max_width(r.w * 0.55)
+        .color(if official.starts_with('#') { accent } else { semi_white(0.55) })
+        .draw();
 }
 
 pub fn note(ui: &mut Ui, width: f32, y: f32, text: &str) {
