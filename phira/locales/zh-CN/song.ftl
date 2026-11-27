@@ -185,7 +185,7 @@ ldb-unavailable = 暂不可用
 ldb-sign-in = 请登录
 ldb-offline = 离线
 ldb-rank-unsupported = 暂不提供
-ldb-my-ranks = 我的排名 · 两服独立统计
+ldb-my-ranks = 我的官服排名
 ldb-local-count = 本机已保存 { $count } 次游玩
 ldb-local-hint = 点击记录查看成绩详情
 ldb-offline-hint = 离线模式下无法查看在线榜单
@@ -193,7 +193,7 @@ ldb-accuracy-hint = 准度仅按已返回成绩排序，不显示准度名次
 ldb-partial-hint = 部分榜源暂不可用，已展示可用成绩
 ldb-mixed-hint = 每位玩家保留较优成绩 · 不显示混合名次
 ldb-pro-hint = Pro服前 20 · 名次仅统计 Pro服
-ldb-sign-in-hint = 登录后即可查看 Pro榜
+ldb-sign-in-hint = 登录后即可查看官服排行榜
 ldb-empty = 暂无成绩
 
 mods-note-behavior = 音符行为
