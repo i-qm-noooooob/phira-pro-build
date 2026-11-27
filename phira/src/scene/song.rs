@@ -815,7 +815,6 @@ impl SongScene {
         self.ldb_account = me;
         self.ldb_official_task = None;
         self.ldb_official_rank_task = None;
-        self.ldb_rank_task = None;
         self.ldb_official = None;
         self.ldb_official_failed = false;
         self.ldb.clear();
