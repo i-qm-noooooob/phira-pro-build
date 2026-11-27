@@ -362,15 +362,10 @@ pub struct SongScene {
 
     ldb: Vec<LdbItem>,
     ldb_official: Option<Vec<Record>>,
-    ldb_pro: Option<Vec<Record>>,
     ldb_official_task: Option<Task<Result<Vec<Record>>>>,
-    ldb_pro_task: Option<Task<Result<Vec<Record>>>>,
     ldb_official_rank_task: Option<Task<Result<RankState>>>,
-    ldb_rank_task: Option<Task<Result<Option<u32>>>>,
     ldb_official_rank: RankState,
-    ldb_pro_rank: RankState,
     ldb_official_failed: bool,
-    ldb_pro_failed: bool,
     ldb_source: BoardSource,
     ldb_controls: leaderboard_view::Controls,
     ldb_account: Option<i32>,
@@ -570,15 +565,10 @@ impl SongScene {
 
             ldb: Vec::new(),
             ldb_official: None,
-            ldb_pro: None,
             ldb_official_task: None,
-            ldb_pro_task: None,
             ldb_official_rank_task: None,
-            ldb_rank_task: None,
             ldb_official_rank: RankState::Loading,
-            ldb_pro_rank: RankState::Loading,
             ldb_official_failed: false,
-            ldb_pro_failed: false,
             ldb_source: if id.is_none() { BoardSource::Local } else { BoardSource::Official },
             ldb_controls: leaderboard_view::Controls::default(),
             ldb_account: get_data().me.as_ref().map(|it| it.id),
@@ -824,22 +814,17 @@ impl SongScene {
         let me = get_data().me.as_ref().map(|it| it.id);
         self.ldb_account = me;
         self.ldb_official_task = None;
-        self.ldb_pro_task = None;
         self.ldb_official_rank_task = None;
         self.ldb_rank_task = None;
         self.ldb_official = None;
-        self.ldb_pro = None;
         self.ldb_official_failed = false;
-        self.ldb_pro_failed = false;
         self.ldb.clear();
         let Some(id) = self.info.id else {
             self.ldb_official_rank = RankState::NoRecord;
-            self.ldb_pro_rank = RankState::NoRecord;
             return;
         };
         if get_data().config.offline_mode {
             self.ldb_official_rank = RankState::Offline;
-            self.ldb_pro_rank = RankState::Offline;
             return;
         }
         let mode = self.ldb_mode;
@@ -849,11 +834,6 @@ impl SongScene {
             _ => RankState::Loading,
         };
         self.ldb_official_task = Some(Task::new(leaderboard::load(id, mode, Origin::Official, me)));
-        self.ldb_pro_rank = match (me, mode) {
-            (None, _) => RankState::SignIn,
-            (_, 2) => RankState::Unsupported,
-            _ => RankState::Loading,
-        };
         if let Some(me) = me {
             if mode != 2 {
                 self.ldb_official_rank_task = Some(Task::new(leaderboard::load_official_rank(id, mode, me)));
@@ -864,7 +844,6 @@ impl SongScene {
     fn rebuild_online_ldb(&mut self) {
         self.ldb = leaderboard::select(
             self.ldb_official.as_deref().unwrap_or_default(),
-            self.ldb_pro.as_deref().unwrap_or_default(),
             self.ldb_source,
             self.ldb_mode,
             self.ldb_account,
@@ -2972,34 +2951,12 @@ impl Scene for SongScene {
             }
             board_changed = true;
         }
-        if let Some(res) = self.ldb_pro_task.as_mut().and_then(|task| task.take()) {
-            self.ldb_pro_task = None;
-            match res {
-                Ok(records) => self.ldb_pro = Some(records),
-                Err(err) => {
-                    warn!(?err, "Pro leaderboard unavailable");
-                    self.ldb_pro_failed = true;
-                }
-            }
-            board_changed = true;
-        }
         if let Some(res) = self.ldb_official_rank_task.as_mut().and_then(|task| task.take()) {
             self.ldb_official_rank_task = None;
             self.ldb_official_rank = match res {
                 Ok(rank) => rank,
                 Err(err) => {
                     warn!(?err, "official player rank unavailable");
-                    RankState::Unavailable
-                }
-            };
-        }
-        if let Some(res) = self.ldb_rank_task.as_mut().and_then(|task| task.take()) {
-            self.ldb_rank_task = None;
-            self.ldb_pro_rank = match res {
-                Ok(Some(rank)) => RankState::Ranked(rank),
-                Ok(None) => RankState::NoRecord,
-                Err(err) => {
-                    warn!(?err, "Pro player rank unavailable");
                     RankState::Unavailable
                 }
             };
