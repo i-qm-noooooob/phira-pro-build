@@ -2,7 +2,6 @@
 use super::LdbItem;
 use crate::client::{recv_raw, Client, Ptr, Record};
 use anyhow::{bail, Result};
-use chrono::Utc;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use std::{
@@ -89,11 +88,7 @@ fn compare(a: &Record, b: &Record, mode: u8) -> std::cmp::Ordering {
 
 fn sorted(mut records: Vec<(Record, Origin)>, mode: u8) -> Vec<(Record, Origin)> {
     records.retain(|(record, _)| record.accuracy.is_finite() && (mode != 1 || record.std_score.is_some_and(|v| v.is_finite())));
-    records.sort_by(|(a, ao), (b, bo)| {
-        a.player.id.cmp(&b.player.id).then_with(|| compare(a, b, mode)).then_with(|| {
-            std::cmp::Ordering::Equal
-        })
-    });
+    records.sort_by(|(a, _), (b, _)| a.player.id.cmp(&b.player.id).then_with(|| compare(a, b, mode)));
     records.dedup_by_key(|(record, _)| record.player.id);
     records.sort_by(|(a, _), (b, _)| compare(a, b, mode));
     records
