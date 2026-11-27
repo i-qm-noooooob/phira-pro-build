@@ -579,7 +579,7 @@ impl SongScene {
             ldb_pro_rank: RankState::Loading,
             ldb_official_failed: false,
             ldb_pro_failed: false,
-            ldb_source: if id.is_none() { BoardSource::Local } else { BoardSource::Pro },
+            ldb_source: if id.is_none() { BoardSource::Local } else { BoardSource::Official },
             ldb_controls: leaderboard_view::Controls::default(),
             ldb_account: get_data().me.as_ref().map(|it| it.id),
             ldb_btn: RectButton::new(),
@@ -1340,7 +1340,7 @@ impl SongScene {
             self.ldb_local_revision = history::revision().wrapping_add(crate::replay::library::revision());
         }
         let source = match self.ldb_source {
-            BoardSource::Pro | BoardSource::Mixed => 0,
+            BoardSource::Official => 0,
             BoardSource::Local => 1,
         };
         let layout = leaderboard_view::header(ui, width, height, &self.info.name, source, self.ldb_mode, rt, &mut self.ldb_controls);
@@ -1379,7 +1379,7 @@ impl SongScene {
         }
         let official_pending = self.ldb_official_task.is_some();
         let pending = match self.ldb_source {
-            BoardSource::Pro | BoardSource::Mixed => official_pending,
+            BoardSource::Official => official_pending,
             BoardSource::Local => false,
         };
         let note = if local {
@@ -1388,12 +1388,12 @@ impl SongScene {
             tl!("ldb-offline-hint")
         } else if self.ldb_mode == 2 {
             tl!("ldb-accuracy-hint")
-        } else if self.ldb_source == BoardSource::Mixed && (self.ldb_pro_failed || self.ldb_official_failed) {
-            tl!("ldb-partial-hint")
+        } else if self.ldb_source == BoardSource::Official && self.ldb_official_failed {
+            tl!("ldb-load-failed")
         } else if pending {
             tl!("ldb-loading")
-        } else if self.ldb_source == BoardSource::Mixed {
-            tl!("ldb-mixed-hint")
+        } else if self.ldb_source == BoardSource::Official {
+            tl!("ldb-official-server")
         } else {
             tl!("ldb-official-server")
         };
@@ -2181,7 +2181,7 @@ impl Scene for SongScene {
                             match action {
                                 leaderboard_view::Action::Source(index) => {
                                     let source = match index {
-                                        0 => BoardSource::Pro,
+                                        0 => BoardSource::Official,
                                         _ => BoardSource::Local,
                                     };
                                     if self.ldb_source != source {
