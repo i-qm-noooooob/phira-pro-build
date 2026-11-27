@@ -154,10 +154,10 @@ mods-perfect-sound-sub = Play cues at the chart's zero-error time for rhythm pra
 
 ## Leaderboard sources and server-specific ranks
 ldb-refresh = Refresh
-ldb-pro = Pro board
+ldb-pro = Official board
 ldb-mixed = Mixed board
 ldb-official-server = Official
-ldb-pro-server = Pro
+ldb-pro-server = Official
 ldb-loading = Loading…
 ldb-no-record = No record
 ldb-unavailable = Unavailable
@@ -169,9 +169,9 @@ ldb-local-count = { $count } saved plays
 ldb-local-hint = Tap a play to view its details
 ldb-offline-hint = Online boards are unavailable in offline mode
 ldb-accuracy-hint = Accuracy sorts returned records; no accuracy ranks
-ldb-partial-hint = One server is unavailable; showing available records
-ldb-mixed-hint = Best result per player · no combined ranks
-ldb-pro-hint = Pro top 20 · ranks within Pro only
+ldb-partial-hint = Official leaderboard is unavailable; showing saved local records
+ldb-mixed-hint = Local records are saved on this device and are not submitted
+ldb-pro-hint = Official leaderboard · ranks are provided by Phira
 ldb-sign-in-hint = Sign in to view the official leaderboard
 ldb-empty = No scores yet
 
