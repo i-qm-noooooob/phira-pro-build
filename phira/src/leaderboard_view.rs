@@ -139,12 +139,12 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
         label(ui, chart, 0.037, 0.103, 0.32, width - 0.09, semi_white(0.5));
     }
     tab(ui, &mut controls.refresh, Rect::new(width - 0.19, 0.025, 0.15, 0.062), t, &board_tl!("ldb-refresh"), false, false);
-    let w = (width - 0.08) / 2.;
+    let source_w = (width - 0.08) / 2.;
     for (i, key) in ["ldb-official-server", "ldb-local-title"].iter().enumerate() {
         tab(
             ui,
             &mut controls.sources[i],
-            Rect::new(0.035 + i as f32 * (w + 0.01), layout.sources_y, w, 0.075),
+            Rect::new(0.035 + i as f32 * (source_w + 0.01), layout.sources_y, source_w, 0.075),
             t,
             &board_tl!(*key),
             source == i,
@@ -156,11 +156,12 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
             btn.invalidate();
         }
     } else {
+        let metric_w = (width - 0.09) / 3.;
         for (i, key) in ["ldb-score", "ldb-std", "ldb-acc"].iter().enumerate() {
             tab(
                 ui,
                 &mut controls.metrics[i],
-                Rect::new(0.035 + i as f32 * (w + 0.01), layout.metric_y, w, 0.055),
+                Rect::new(0.035 + i as f32 * (metric_w + 0.01), layout.metric_y, metric_w, 0.055),
                 t,
                 &board_tl!(*key),
                 metric == i as u8,
