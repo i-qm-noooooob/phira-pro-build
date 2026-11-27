@@ -160,7 +160,7 @@ impl EndingScene {
             target: None,
             audio,
             bgm,
-            update_state: if upload_task.is_some() || result.grading.detailed {
+            update_state: if upload_task.is_some() || record_data.is_some() || result.grading.detailed {
                 None
             } else {
                 let (best, improvement) = if (result.score as i32) > (historic_best as i32) {
