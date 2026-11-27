@@ -496,8 +496,7 @@ impl Client {
     /// is no longer needed here (the native anti-addiction bridge that used it
     /// is gone).
     async fn store_login(_id: i32, token: String, refresh_token: String) -> Result<()> {
-        // 换号后旧账号的私服 Token 必须作废，否则会把成绩记到上一个账号名下。
-        PRO_TOKEN.store(None);
+        // A fresh official session replaces the previous account session.
         let _guard = SESSION_UPDATE_LOCK.lock().unwrap();
         let client = build_client()?;
         header::HeaderValue::from_str(&format!("Bearer {token}"))?;
