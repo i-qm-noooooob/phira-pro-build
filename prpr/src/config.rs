@@ -27,12 +27,6 @@ use std::cell::Cell;
 
 pub static TIPS: Lazy<Vec<String>> = Lazy::new(|| include_str!("tips.txt").split('\n').map(str::to_owned).collect());
 
-/// Phira Pro：自服（`phira-pro-api`）基础地址。
-///
-/// 「读官服、写自服」：谱面 / 用户 / 全局 rks 仍走官服；成绩固定上传到这里，
-/// 单谱排行榜把官服与自服的记录合并展示。**固定值，不可配置。**
-pub const PRO_API_URL: &str = "https://api.phira.pro";
-
 thread_local! {
     static GLOBAL_OFFSET_REQUEST: Cell<Option<f32>> = const { Cell::new(None) };
 }
