@@ -1,4 +1,4 @@
-//! Keep server ranks separate from the unranked, deduplicated mixed feed.
+//! Official leaderboard loading, ranking, and local-source selection.
 use super::LdbItem;
 use crate::client::{recv_raw, Client, Ptr, Record};
 use anyhow::{bail, Result};
