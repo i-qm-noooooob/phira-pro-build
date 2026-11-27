@@ -18,8 +18,7 @@ pub(super) enum Origin {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum BoardSource {
-    Pro,
-    Mixed,
+    Official,
     Local,
 }
 
@@ -149,9 +148,9 @@ pub(super) async fn load_official_rank(chart: i32, mode: u8, player: i32) -> Res
     Ok(official_rank(&records, player))
 }
 
-pub(super) fn select(official: &[Record], pro: &[Record], source: BoardSource, mode: u8, me: Option<i32>) -> Vec<LdbItem> {
+pub(super) fn select(official: &[Record], _private_records: &[Record], source: BoardSource, mode: u8, me: Option<i32>) -> Vec<LdbItem> {
     match source {
-        BoardSource::Pro | BoardSource::Mixed => ranked(official.to_vec(), mode, me, Origin::Official),
+        BoardSource::Official => ranked(official.to_vec(), mode, me, Origin::Official),
         BoardSource::Local => Vec::new(),
     }
 }
@@ -219,7 +218,7 @@ mod tests {
     fn official_board_source_uses_only_official_records_with_server_ranks() {
         let official = vec![record(9, 1_000_000, 1., 1_000_000.), record(1, 900_000, 0.99, 800_000.)];
         let private_records = vec![record(2, 999_999, 0.999, 999_999.)];
-        let items = select(&official, &private_records, BoardSource::Pro, 0, Some(9));
+        let items = select(&official, &private_records, BoardSource::Official, 0, Some(9));
         assert_eq!(items.len(), 2);
         assert_eq!(items[0].inner.player.id, 9);
         assert_eq!(items[0].origin, Origin::Official);
