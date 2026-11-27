@@ -46,7 +46,7 @@ use prpr::{
     judge::icon_index,
     scene::{
         request_file, request_input, return_file, return_input, show_error, show_message, take_file, take_input, BasicPlayer, GameMode, GameScene,
-        LoadingScene, LocalSceneTask, NextScene, RecordUpdateState, SaveFn, Scene, SimpleRecord, UpdateFn, UploadFn, UploadScore,
+        LoadingScene, LocalSceneTask, NextScene, SaveFn, Scene, SimpleRecord, UpdateFn, UploadFn,
     },
     task::Task,
     time::TimeManager,
