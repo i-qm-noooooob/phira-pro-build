@@ -17,6 +17,7 @@ use prpr::{
 
 const PHIGROS: &str = "builtin-phigros";
 const PRO: &str = "builtin-pro";
+const PHIRA: &str = "builtin-phira";
 const DETAILED: &str = "builtin-detailed";
 
 #[cfg(all(test, target_os = "windows"))]
@@ -265,10 +266,16 @@ impl JudgementList {
         let mut names = vec![
             tl!("preset-phigros").into_owned(),
             tl!("preset-pro").into_owned(),
+            tl!("preset-phira").into_owned(),
             tl!("preset-detailed").into_owned(),
         ];
-        self.ids = vec![Some(PHIGROS.into()), Some(PRO.into()), Some(DETAILED.into())];
-        let mut settings = vec![JudgeSettings::phigros(), JudgeSettings::default(), JudgeSettings::detailed()];
+        self.ids = vec![Some(PHIGROS.into()), Some(PRO.into()), Some(PHIRA.into()), Some(DETAILED.into())];
+        let mut settings = vec![
+            JudgeSettings::phigros(),
+            JudgeSettings::default(),
+            JudgeSettings::phira(),
+            JudgeSettings::detailed(),
+        ];
         for p in &data.judge_presets {
             names.push(p.name.clone());
             self.ids.push(Some(p.id.clone()));
@@ -299,6 +306,7 @@ impl JudgementList {
         let settings = match id.as_deref() {
             Some(PHIGROS) => Some(JudgeSettings::phigros()),
             Some(PRO) => Some(JudgeSettings::default()),
+            Some(PHIRA) => Some(JudgeSettings::phira()),
             Some(DETAILED) => Some(JudgeSettings::detailed()),
             Some(id) => get_data().judge_presets.iter().find(|p| p.id == id).map(|p| p.settings.clone()),
             None => None,
@@ -420,7 +428,7 @@ impl JudgementList {
             return Ok(Some(false));
         }
         if self.delete.touch(touch, t) {
-            if let Some(id) = self.selection().map(str::to_owned).filter(|s| s != PHIGROS && s != PRO && s != DETAILED) {
+            if let Some(id) = self.selection().map(str::to_owned).filter(|s| s != PHIGROS && s != PRO && s != PHIRA && s != DETAILED) {
                 let data = get_data_mut();
                 let old = (data.judge_presets.clone(), data.judge_preset_id.clone());
                 data.judge_presets.retain(|p| p.id != id);
