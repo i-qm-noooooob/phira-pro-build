@@ -10,16 +10,14 @@ use std::{
     fmt,
     marker::PhantomData,
     sync::Arc,
-    time::{Duration, Instant},
 };
 
 use crate::{get_data, get_data_mut, save_data};
 use anyhow::{anyhow, bail, Context, Result};
 use arc_swap::{ArcSwap, ArcSwapOption};
 use auth::{send_with_refresh, Session};
-use chrono::{DateTime, Utc};
 use once_cell::sync::Lazy;
-use prpr::{config::PRO_API_URL, scene::SimpleRecord};
+use prpr::scene::SimpleRecord;
 use prpr_l10n::LANG_IDENTS;
 use reqwest::{header, ClientBuilder, Method, RequestBuilder, Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -29,16 +27,8 @@ use tracing::{debug, warn};
 pub static CLIENT_TOKEN: Lazy<ArcSwap<Option<String>>> = Lazy::new(|| ArcSwap::from_pointee(None));
 
 static CLIENT: Lazy<ArcSwap<reqwest::Client>> = Lazy::new(|| ArcSwap::from_pointee(basic_client_builder().build().unwrap()));
-// Pro requests add authentication per request and reuse connections.
-static PRO_CLIENT: Lazy<ArcSwap<reqwest::Client>> = Lazy::new(|| ArcSwap::from_pointee(basic_client_builder().build().unwrap()));
-static SCORE_CLIENT: Lazy<ArcSwap<reqwest::Client>> =
-    Lazy::new(|| ArcSwap::from_pointee(basic_client_builder().redirect(score_redirect_policy()).build().unwrap()));
 static SESSION: Lazy<ArcSwapOption<Session>> = Lazy::new(ArcSwapOption::empty);
 pub(crate) static SESSION_UPDATE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-fn score_redirect_policy() -> reqwest::redirect::Policy {
-    reqwest::redirect::Policy::none()
-}
 
 pub struct Client;
 
@@ -59,155 +49,10 @@ fn base_url(value: &str, default: &str) -> String {
     }
 }
 
-/// 当前使用的 Phira API 基础地址（登录、谱面等只读数据；成绩只上传到 Pro）。
+/// 当前使用的 Phira 官方 API 基础地址（登录、谱面、排行榜等）。
 /// 自建 / 私服改成 `config.api_url` 即可；改完需要重启生效。
 pub fn api_url() -> String {
     base_url(&get_data().config.api_url, DEFAULT_API_URL)
-}
-
-// —— Phira Pro：成绩固定上传到 `PRO_API_URL`，鉴权用 exchange 换来的私服 JWE。 —— //
-
-/// 私服（Phira Pro）Token：由 `POST /api/v1/auth/token` 换得的 JWE 及其过期时刻。
-#[derive(Clone)]
-struct ProToken {
-    token: String,
-    expires_at: Instant,
-}
-
-/// 私服 Token 缓存。为空或临近过期时由 [`ensure_pro_token`] 用官方 refreshToken 重新换取。
-static PRO_TOKEN: Lazy<ArcSwapOption<ProToken>> = Lazy::new(ArcSwapOption::empty);
-
-fn current_pro_token() -> Result<String> {
-    PRO_TOKEN
-        .load()
-        .as_ref()
-        .map(|it| it.token.clone())
-        .ok_or_else(|| anyhow!("Phira Pro Token 不可用"))
-}
-
-/// 用本地保存的官方 refreshToken 换取私服 Token（JWE）并缓存。
-///
-/// 需先完成官方登录（本地存有 refreshToken）；未登录时返回错误。
-pub async fn pro_exchange_token() -> Result<()> {
-    let refresh_token = get_data()
-        .tokens
-        .as_ref()
-        .map(|it| it.1.clone())
-        .ok_or_else(|| anyhow!("尚未登录，无法获取 Phira Pro Token"))?;
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Req {
-        refresh_token: String,
-    }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Resp {
-        token: String,
-        expires_at: DateTime<Utc>,
-    }
-    let resp: Resp = recv_raw(
-        PRO_CLIENT
-            .load()
-            .post(format!("{PRO_API_URL}/api/v1/auth/token"))
-            .json(&Req { refresh_token }),
-    )
-    .await?
-    .json()
-    .await?;
-    let remaining = resp.expires_at.signed_duration_since(Utc::now()).to_std().unwrap_or_default();
-    PRO_TOKEN.store(Some(Arc::new(ProToken {
-        token: resp.token,
-        expires_at: Instant::now() + remaining,
-    })));
-    Ok(())
-}
-
-/// 确保私服 Token 可用；缺失或 30 秒内过期时重新换取。
-async fn ensure_pro_token() -> Result<()> {
-    if let Some(token) = PRO_TOKEN.load().as_ref() {
-        if token.expires_at > Instant::now() + Duration::from_secs(30) {
-            return Ok(());
-        }
-    }
-    pro_exchange_token().await
-}
-
-fn pro_auth(token: &str, mut req: RequestBuilder) -> Result<RequestBuilder> {
-    if let Ok(locale) = header::HeaderValue::from_str(&client_locale()) {
-        req = req.header(header::ACCEPT_LANGUAGE, locale);
-    }
-    let mut value = header::HeaderValue::from_str(&format!("Bearer {token}"))?;
-    value.set_sensitive(true);
-    Ok(req.header(header::AUTHORIZATION, value))
-}
-
-async fn send_pro(client: &reqwest::Client, method: &Method, path: &str, body: Option<&serde_json::Value>) -> Result<Response> {
-    let req = client.request(method.clone(), format!("{PRO_API_URL}{path}"));
-    let req = match body {
-        Some(body) => req.json(body),
-        None => req,
-    };
-    Ok(pro_auth(&current_pro_token()?, req)?.send().await?)
-}
-
-/// 发送私服请求并处理鉴权：收到 401 时重新换取 Token 再重试一次。
-async fn pro_send(client: Arc<reqwest::Client>, method: Method, path: &str, body: Option<serde_json::Value>) -> Result<Response> {
-    check_response(pro_send_response(client, method, path, body).await?).await
-}
-
-async fn pro_send_response(client: Arc<reqwest::Client>, method: Method, path: &str, body: Option<serde_json::Value>) -> Result<Response> {
-    ensure_pro_token().await?;
-    let response = send_pro(&client, &method, path, body.as_ref()).await?;
-    if response.status() != StatusCode::UNAUTHORIZED {
-        return Ok(response);
-    }
-    pro_exchange_token().await?;
-    send_pro(&client, &method, path, body.as_ref()).await
-}
-
-pub async fn pro_get(path: impl AsRef<str>) -> Result<Response> {
-    let client = Arc::clone(&PRO_CLIENT.load());
-    pro_send(client, Method::GET, path.as_ref(), None).await
-}
-
-/// 私服成绩上传的响应。
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ScoreUploadResp {
-    pub id: i64,
-    pub new_best: bool,
-    pub improvement: i32,
-}
-
-/// 上传一局成绩到 Phira Pro（`POST /api/v1/scores`）。
-///
-/// 使用独立连接池且不跟随重定向，避免把带鉴权的成绩体转发到别处；失败不回退官服。
-pub async fn pro_upload_score<T: Serialize>(body: &T) -> Result<ScoreUploadResp> {
-    let client = Arc::clone(&SCORE_CLIENT.load());
-    let response = pro_send(client, Method::POST, "/api/v1/scores", Some(serde_json::to_value(body)?)).await?;
-    Ok(response.json().await?)
-}
-
-#[derive(Deserialize)]
-struct PlayerRank {
-    rank: i64,
-}
-
-/// 查询某玩家在某谱面的私服名次；`metric` 取 `"score"` 或 `"stdScore"`。
-///
-/// 名次只统计私服（不含官服、不受 top20 限制）；该玩家在该谱面无成绩时后端返回 404。
-pub async fn pro_player_rank(chart: i32, player: i32, metric: &str) -> Result<Option<u32>> {
-    let path = format!("/api/v1/charts/{chart}/players/{player}/rank?metric={metric}");
-    let response = pro_send_response(Arc::clone(&PRO_CLIENT.load()), Method::GET, &path, None).await?;
-    if response.status() == StatusCode::NOT_FOUND {
-        return Ok(None);
-    }
-    let rank = check_response(response).await?.json::<PlayerRank>().await?.rank;
-    let rank = u32::try_from(rank).context("invalid Pro rank")?;
-    if rank == 0 {
-        bail!("invalid Pro rank");
-    }
-    Ok(Some(rank))
 }
 
 /// 当前使用的 Phira 网页前端地址（谱面页 / 用户页 / 合集页 / 条款链接等）。
@@ -257,11 +102,6 @@ fn build_client() -> Result<Arc<reqwest::Client>> {
 }
 
 pub fn set_access_token_sync(access_token: Option<&str>) -> Result<()> {
-    // 登录 / 登出 / 切换账号：丢弃旧账号的私服 Token，之后按需重新 exchange。
-    PRO_TOKEN.store(None);
-    PRO_CLIENT.store(Arc::new(basic_client_builder().build()?));
-    SCORE_CLIENT.store(Arc::new(basic_client_builder().redirect(score_redirect_policy()).build()?));
-
     let _guard = SESSION_UPDATE_LOCK.lock().unwrap();
     let client = build_client()?;
     if let Some(token) = access_token {
@@ -656,8 +496,7 @@ impl Client {
     /// is no longer needed here (the native anti-addiction bridge that used it
     /// is gone).
     async fn store_login(_id: i32, token: String, refresh_token: String) -> Result<()> {
-        // 换号后旧账号的私服 Token 必须作废，否则会把成绩记到上一个账号名下。
-        PRO_TOKEN.store(None);
+        // A fresh official session replaces the previous account session.
         let _guard = SESSION_UPDATE_LOCK.lock().unwrap();
         let client = build_client()?;
         header::HeaderValue::from_str(&format!("Bearer {token}"))?;

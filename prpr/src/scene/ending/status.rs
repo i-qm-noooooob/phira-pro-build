@@ -27,6 +27,10 @@ fn badge_items(c: &Config, rated: bool, upload_route_available: bool) -> Vec<Bad
     let strict_label_exception = upload_route_available && c.mods.contains(Mods::STRICT_JUDGE) && without_strict.is_official_play(Mods::empty());
     if !rated && !c.autoplay() && !strict_label_exception {
         push_text(&mut items, "UNRATED");
+    } else if rated && !upload_route_available {
+        // Eligibility and transport availability are different: don't label a
+        // valid play UNRATED merely because this public build has no uploader.
+        push_text(&mut items, "UPLOAD UNAVAILABLE");
     }
     let mods = super::mod_badges::active(c.mods);
     let use_icons = mods.len() > 1;
@@ -55,6 +59,8 @@ impl PlayStatus {
         let mut primary = Vec::new();
         if !rated {
             primary.push("UNRATED".to_owned());
+        } else if !upload_route_available {
+            primary.push("UPLOAD UNAVAILABLE".to_owned());
         }
         let od = c.selected_osu_mania_od();
         if let Some(od) = od {
@@ -243,6 +249,16 @@ mod tests {
                 assert!(s.details.starts_with("UNRATED"), "the details keep actual eligibility");
             }
         }
+    }
+
+    #[test]
+    fn eligible_play_without_upload_route_is_not_mislabelled_unrated() {
+        let c = Config::default();
+        let status = PlayStatus::new(&c, true, false);
+        assert_eq!(text(&status), "UPLOAD UNAVAILABLE");
+        assert!(status.details.starts_with("UPLOAD UNAVAILABLE"));
+        let status = PlayStatus::new(&c, false, false);
+        assert_eq!(text(&status), "UNRATED");
     }
 
     #[test]

@@ -149,6 +149,13 @@ impl EndingScene {
         let upload_task = upload_fn
             .as_ref()
             .and_then(|f| record_data.clone().map(|data| (f(data), show_message(tl!("uploading")).handle())));
+        // Keep gameplay eligibility separate from whether this build has a
+        // transport implementation for the official score endpoint.
+        let eligible = info.id.is_some()
+            && !config.offline_mode
+            && !config.autoplay()
+            && config.is_official_play(config.mods);
+        let upload_route_available = upload_fn.is_some() && info.id.is_some();
         Ok(Self {
             background,
             illustration,
@@ -160,7 +167,7 @@ impl EndingScene {
             target: None,
             audio,
             bgm,
-            update_state: if upload_task.is_some() || result.grading.detailed {
+            update_state: if upload_task.is_some() || record_data.is_some() || result.grading.detailed {
                 None
             } else {
                 let (best, improvement) = if (result.score as i32) > (historic_best as i32) {
@@ -170,7 +177,7 @@ impl EndingScene {
                 };
                 Some(RecordUpdateState { best, improvement })
             },
-            status: PlayStatus::new(config, upload_task.is_some(), upload_fn.is_some() && info.id.is_some()),
+            status: PlayStatus::new(config, eligible, upload_route_available),
             btn_status: RectButton::new(),
 
             info,

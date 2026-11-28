@@ -17,6 +17,7 @@ use prpr::{
 
 const PHIGROS: &str = "builtin-phigros";
 const PRO: &str = "builtin-pro";
+const PHIRA: &str = "builtin-phira";
 const DETAILED: &str = "builtin-detailed";
 
 #[cfg(all(test, target_os = "windows"))]
@@ -265,10 +266,16 @@ impl JudgementList {
         let mut names = vec![
             tl!("preset-phigros").into_owned(),
             tl!("preset-pro").into_owned(),
+            tl!("preset-phira").into_owned(),
             tl!("preset-detailed").into_owned(),
         ];
-        self.ids = vec![Some(PHIGROS.into()), Some(PRO.into()), Some(DETAILED.into())];
-        let mut settings = vec![JudgeSettings::phigros(), JudgeSettings::default(), JudgeSettings::detailed()];
+        self.ids = vec![Some(PHIGROS.into()), Some(PRO.into()), Some(PHIRA.into()), Some(DETAILED.into())];
+        let mut settings = vec![
+            JudgeSettings::phigros(),
+            JudgeSettings::default(),
+            JudgeSettings::phira(),
+            JudgeSettings::detailed(),
+        ];
         for p in &data.judge_presets {
             names.push(p.name.clone());
             self.ids.push(Some(p.id.clone()));
@@ -299,6 +306,7 @@ impl JudgementList {
         let settings = match id.as_deref() {
             Some(PHIGROS) => Some(JudgeSettings::phigros()),
             Some(PRO) => Some(JudgeSettings::default()),
+            Some(PHIRA) => Some(JudgeSettings::phira()),
             Some(DETAILED) => Some(JudgeSettings::detailed()),
             Some(id) => get_data().judge_presets.iter().find(|p| p.id == id).map(|p| p.settings.clone()),
             None => None,
@@ -350,7 +358,7 @@ impl JudgementList {
                         return Ok(Some(false));
                     }
                 };
-                if name == tl!("preset-phigros").as_ref() || name == tl!("preset-pro").as_ref() || name == tl!("preset-detailed").as_ref() {
+                if name == tl!("preset-phigros").as_ref() || name == tl!("preset-pro").as_ref() || name == tl!("preset-phira").as_ref() || name == tl!("preset-detailed").as_ref() {
                     show_error(anyhow::anyhow!(tl!("preset-name-duplicate").into_owned()));
                     self.draft = Some(draft);
                     return Ok(Some(false));
@@ -420,7 +428,7 @@ impl JudgementList {
             return Ok(Some(false));
         }
         if self.delete.touch(touch, t) {
-            if let Some(id) = self.selection().map(str::to_owned).filter(|s| s != PHIGROS && s != PRO && s != DETAILED) {
+            if let Some(id) = self.selection().map(str::to_owned).filter(|s| s != PHIGROS && s != PRO && s != PHIRA && s != DETAILED) {
                 let data = get_data_mut();
                 let old = (data.judge_presets.clone(), data.judge_preset_id.clone());
                 data.judge_presets.retain(|p| p.id != id);
@@ -651,7 +659,7 @@ impl JudgementList {
             row! { render_title(ui, tl!("preset-select"), Some(tl!("preset-select-sub"))); }
             row! { self.selector.render(ui, Rect::new(r.w - 0.61, 0.02, 0.56, item_row_h() - 0.04), t); }
             row! { render_title(ui, tl!("preset-copy"), None); self.copy.render_text(ui, rr, t, tl!("preset-copy"), 0.42, false); }
-            let custom = self.selection().is_some_and(|id| id != PHIGROS && id != PRO && id != DETAILED);
+            let custom = self.selection().is_some_and(|id| id != PHIGROS && id != PRO && id != PHIRA && id != DETAILED);
             if custom {
                 row! { render_title(ui, tl!("preset-edit"), None); self.edit.render_text(ui, rr, t, tl!("preset-edit"), 0.42, false); }
             } else {

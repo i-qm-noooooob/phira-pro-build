@@ -16,7 +16,7 @@ pub enum Action {
 }
 
 pub struct Controls {
-    pub sources: [DRectButton; 3],
+    pub sources: [DRectButton; 2],
     pub metrics: [DRectButton; 3],
     pub refresh: DRectButton,
 }
@@ -65,7 +65,7 @@ impl Layout {
         let sources_y = if compact { 0.105 } else { 0.13 };
         let metric_y = sources_y + 0.09;
         let ranks_y = metric_y + 0.07;
-        let note_y = ranks_y + if local { 0.06 } else { 0.15 };
+        let note_y = ranks_y + if local { 0.06 } else { 0.10 };
         Self {
             sources_y,
             metric_y,
@@ -118,7 +118,7 @@ fn tab(ui: &mut Ui, btn: &mut DRectButton, r: Rect, t: f32, text: &str, active: 
 
 #[allow(clippy::too_many_arguments)]
 pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, metric: u8, t: f32, controls: &mut Controls) -> Layout {
-    let local = source == 2;
+    let local = source == 1;
     let layout = Layout::new(height, local);
     let tint = Color::new(0.035, 0.04, 0.05, 0.5);
     let opacity = |p: f32| tint.a * p * p * (3. - 2. * p);
@@ -139,12 +139,12 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
         label(ui, chart, 0.037, 0.103, 0.32, width - 0.09, semi_white(0.5));
     }
     tab(ui, &mut controls.refresh, Rect::new(width - 0.19, 0.025, 0.15, 0.062), t, &board_tl!("ldb-refresh"), false, false);
-    let w = (width - 0.09) / 3.;
-    for (i, key) in ["ldb-pro", "ldb-mixed", "ldb-local-title"].iter().enumerate() {
+    let source_w = (width - 0.08) / 2.;
+    for (i, key) in ["ldb-official-server", "ldb-local-title"].iter().enumerate() {
         tab(
             ui,
             &mut controls.sources[i],
-            Rect::new(0.035 + i as f32 * (w + 0.01), layout.sources_y, w, 0.075),
+            Rect::new(0.035 + i as f32 * (source_w + 0.01), layout.sources_y, source_w, 0.075),
             t,
             &board_tl!(*key),
             source == i,
@@ -156,11 +156,12 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
             btn.invalidate();
         }
     } else {
+        let metric_w = (width - 0.09) / 3.;
         for (i, key) in ["ldb-score", "ldb-std", "ldb-acc"].iter().enumerate() {
             tab(
                 ui,
                 &mut controls.metrics[i],
-                Rect::new(0.035 + i as f32 * (w + 0.01), layout.metric_y, w, 0.055),
+                Rect::new(0.035 + i as f32 * (metric_w + 0.01), layout.metric_y, metric_w, 0.055),
                 t,
                 &board_tl!(*key),
                 metric == i as u8,
@@ -171,7 +172,7 @@ pub fn header(ui: &mut Ui, width: f32, height: f32, chart: &str, source: usize, 
     layout
 }
 
-pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str, pro: &str) {
+pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str) {
     let accent = ui.accent();
     ui.fill_path(&r.rounded(0.014), semi_white(0.055));
     let compact = r.h < 0.12;
@@ -179,18 +180,16 @@ pub fn rank_lines(ui: &mut Ui, r: Rect, heading: &str, official: &str, pro: &str
     if !compact {
         label(ui, heading, r.x + 0.02, r.y + 0.024, 0.32, r.w - 0.04, semi_white(0.55));
     }
-    for (i, (key, value)) in [("ldb-official-server", official), ("ldb-pro-server", pro)].iter().enumerate() {
-        let y = r.y + top + (i as f32 + 0.5) * (r.h - top) / 2.;
-        label(ui, &board_tl!(*key), r.x + 0.02, y, 0.38, r.w * 0.4, semi_white(0.75));
-        ui.text(*value)
-            .pos(r.right() - 0.02, y)
-            .anchor(1., 0.5)
-            .no_baseline()
-            .size(0.42)
-            .max_width(r.w * 0.55)
-            .color(if value.starts_with('#') { accent } else { semi_white(0.55) })
-            .draw();
-    }
+    let y = r.y + top + (r.h - top) / 2.;
+    label(ui, &board_tl!("ldb-official-server"), r.x + 0.02, y, 0.38, r.w * 0.4, semi_white(0.75));
+    ui.text(official)
+        .pos(r.right() - 0.02, y)
+        .anchor(1., 0.5)
+        .no_baseline()
+        .size(0.42)
+        .max_width(r.w * 0.55)
+        .color(if official.starts_with('#') { accent } else { semi_white(0.55) })
+        .draw();
 }
 
 pub fn note(ui: &mut Ui, width: f32, y: f32, text: &str) {

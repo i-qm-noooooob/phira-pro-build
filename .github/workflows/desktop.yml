@@ -1,6 +1,10 @@
 name: Build Desktop Packages
 
 on:
+  push:
+    branches: [official-server-migration]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run-tests:
@@ -22,7 +26,39 @@ permissions:
   contents: read
 
 jobs:
+  source-checks:
+    name: Migration source checks
+    if: github.event_name != 'workflow_dispatch' && github.event_name != 'workflow_call'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify versions and build tooling
+        run: |
+          python scripts/version.py check
+          python -m unittest discover -s scripts/tests -v
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libasound2-dev libx11-dev libxi-dev libwayland-dev libgl1-mesa-dev libdbus-1-dev zlib1g-dev
+
+      - name: Set up Rust
+        run: rustup toolchain install
+
+      - name: Test core engine
+        run: cargo test --locked -p prpr --no-default-features --lib
+
+      - name: Test Phira client
+        run: cargo test --locked -p phira --no-default-features --lib
+
   desktop:
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
     name: ${{ matrix.platform }} release
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90

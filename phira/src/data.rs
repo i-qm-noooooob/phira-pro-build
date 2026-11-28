@@ -166,6 +166,15 @@ impl Data {
     }
     pub async fn init(&mut self) -> Result<()> {
         self.config.phigros_rules.sanitize();
+        // New installs (and legacy data with untouched defaults) start with
+        // official Phira judgement. Preserve any existing customized settings.
+        if self.judge_preset_id.is_none()
+            && crate::judgement_presets::JudgeSettings::capture(&self.config)
+                == crate::judgement_presets::JudgeSettings::capture(&Config::default())
+        {
+            crate::judgement_presets::JudgeSettings::phira().apply(&mut self.config);
+            self.judge_preset_id = Some("builtin-phira".into());
+        }
         for preset in &mut self.judge_presets {
             preset.settings.normalize();
         }
