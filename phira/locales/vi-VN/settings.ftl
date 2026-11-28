@@ -348,3 +348,5 @@ practice-debug-performance = Frame rate
 practice-debug-input = Touch visualization
 
 item-fps-unlimited = Không giới hạn
+
+preset-phira = Judge Phira\npreset-phira-short = Phira
