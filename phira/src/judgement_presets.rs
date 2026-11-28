@@ -43,6 +43,15 @@ impl JudgeSettings {
             phigros: c.phigros_rules.clone(),
         }
     }
+    /// Official Phira judgement: standard Phira windows and matching, without Pro's
+    /// optional drag/flick interception protections.
+    pub fn phira() -> Self {
+        Self {
+            drag_protect: false,
+            flick_protect: false,
+            ..Self::default()
+        }
+    }
     pub fn phigros() -> Self {
         Self {
             algorithm: JudgeAlgorithm::Phigros,
