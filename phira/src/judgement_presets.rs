@@ -150,6 +150,16 @@ mod tests {
         assert!(config.drag_protect && config.flick_protect);
     }
     #[test]
+    fn phira_preset_matches_official_play_gate() {
+        let settings = JudgeSettings::phira();
+        assert!(!settings.drag_protect && !settings.flick_protect);
+        let mut config = Config::default();
+        settings.apply(&mut config);
+        assert!(config.is_official_play(Mods::empty()));
+        assert!(config.force_official_play(&mut Mods::empty()).is_empty());
+    }
+
+    #[test]
     fn osu_mania_od_formula_covers_all_requested_values_and_keeps_seven_windows_ordered() {
         for od in -15..=15 {
             let mut s = JudgeSettings::detailed();
