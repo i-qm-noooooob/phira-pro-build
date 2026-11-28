@@ -350,7 +350,7 @@ impl JudgementList {
                         return Ok(Some(false));
                     }
                 };
-                if name == tl!("preset-phigros").as_ref() || name == tl!("preset-pro").as_ref() || name == tl!("preset-detailed").as_ref() {
+                if name == tl!("preset-phigros").as_ref() || name == tl!("preset-pro").as_ref() || name == tl!("preset-phira").as_ref() || name == tl!("preset-detailed").as_ref() {
                     show_error(anyhow::anyhow!(tl!("preset-name-duplicate").into_owned()));
                     self.draft = Some(draft);
                     return Ok(Some(false));
@@ -651,7 +651,7 @@ impl JudgementList {
             row! { render_title(ui, tl!("preset-select"), Some(tl!("preset-select-sub"))); }
             row! { self.selector.render(ui, Rect::new(r.w - 0.61, 0.02, 0.56, item_row_h() - 0.04), t); }
             row! { render_title(ui, tl!("preset-copy"), None); self.copy.render_text(ui, rr, t, tl!("preset-copy"), 0.42, false); }
-            let custom = self.selection().is_some_and(|id| id != PHIGROS && id != PRO && id != DETAILED);
+            let custom = self.selection().is_some_and(|id| id != PHIGROS && id != PRO && id != PHIRA && id != DETAILED);
             if custom {
                 row! { render_title(ui, tl!("preset-edit"), None); self.edit.render_text(ui, rr, t, tl!("preset-edit"), 0.42, false); }
             } else {
