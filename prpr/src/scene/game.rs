@@ -2101,7 +2101,10 @@ impl Scene for GameScene {
                         hist: result.hist.to_vec(),
                         std: result.std,
                     };
-                    let record = if !complete_life_run || self.res.config.mods.intersects(Mods::UNRATED) || self.res.config.speed < 1.0 - 1e-3 {
+                    // Local PB and official upload must use the same eligibility
+                    // rules; custom judgement / offline / unrated mods must not
+                    // silently update the best record.
+                    let record = if !complete_life_run || !self.res.config.is_official_play(self.res.config.mods) {
                         None
                     } else {
                         Some(history_record.clone())
